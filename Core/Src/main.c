@@ -31,7 +31,6 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "lvgl.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -106,9 +105,7 @@ int main(void)
   MX_DMA2D_Init();
   MX_LTDC_Init();
   /* USER CODE BEGIN 2 */
-  lv_init();
-  // 为lvgl设置时钟接口
-  lv_tick_set_cb(xTaskGetTickCount);
+
   /* USER CODE END 2 */
 
   /* Init scheduler */

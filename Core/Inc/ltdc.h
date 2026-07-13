@@ -35,13 +35,15 @@ extern "C" {
 extern LTDC_HandleTypeDef hltdc;
 
 /* USER CODE BEGIN Private defines */
-
+/* LTDC帧缓冲区首地址,这里定义在SDRAM里面. */
+#define LTDC_FRAME_BUF_ADDR 0XC0000000
 /* USER CODE END Private defines */
 
 void MX_LTDC_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-
+// 填充函数
+void ltdc_color_fill(uint16_t sx, uint16_t sy, uint16_t ex, uint16_t ey, uint16_t *color);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

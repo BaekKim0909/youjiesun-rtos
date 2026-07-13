@@ -47,6 +47,7 @@ file(GLOB_RECURSE LVGL_SOURCE "Middlewares/lvgl/*.c")
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
         ${LVGL_SOURCE}
+        Core/App/UI/Src/mainUI.c
 )
 
 # Add include paths
@@ -55,6 +56,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
         Middlewares/lvgl
         Middlewares/lvgl/src
         Middlewares/lvgl/porting
+        Core/App/UI/Inc
 )
 
 # Add project symbols (macros)

@@ -21,7 +21,10 @@
 #include "ltdc.h"
 
 /* USER CODE BEGIN 0 */
+extern DMA2D_HandleTypeDef hdma2d;
 
+__attribute__((section(".sdram")))
+  uint16_t ltdc_lcd_framebuf[800][480];
 /* USER CODE END 0 */
 
 LTDC_HandleTypeDef hltdc;
@@ -235,6 +238,37 @@ void HAL_LTDC_MspDeInit(LTDC_HandleTypeDef* ltdcHandle)
 }
 
 /* USER CODE BEGIN 1 */
+void ltdc_color_fill(uint16_t sx, uint16_t sy, uint16_t ex, uint16_t ey, uint16_t *color)
+{
+  uint32_t psx, psy, pex, pey;
+  uint16_t offline;
+  uint32_t addr;
+
+  psx = sx;
+  psy = sy;
+  pex = ex;
+  pey = ey;
+
+  offline = 800 - (pex - psx + 1);
+  addr = ((uint32_t)ltdc_lcd_framebuf + 2 * (800 * psy + psx));
+
+  hdma2d.Instance->OOR = offline;
+  /* 启动 DMA2D 前，先清除完成标志 */
+  // dma2d_transfer_complete = 0;
+  if (HAL_DMA2D_Start_IT(&hdma2d,
+                     (uint32_t)color,
+                     addr,
+                     (pex - psx + 1),
+                     (pey - psy + 1)) != HAL_OK)
+  {
+    /* code */
+    /* DMA2D 启动失败时，避免 flush_wait_cb 死等 */
+    // dma2d_transfer_complete = 1;
+    return;
+  }
+
+
+}
 
 /* USER CODE END 1 */
 

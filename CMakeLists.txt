@@ -43,18 +43,24 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 )
 
 # Add sources to executable
+file(GLOB_RECURSE LVGL_SOURCE "Middlewares/lvgl/*.c")
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
+        ${LVGL_SOURCE}
 )
 
 # Add include paths
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined include paths
+        Middlewares/lvgl
+        Middlewares/lvgl/src
+        Middlewares/lvgl/porting
 )
 
 # Add project symbols (macros)
 target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined symbols
+        LV_LVGL_H_INCLUDE_SIMPLE
 )
 
 # Remove wrong libob.a library dependency when using cpp files

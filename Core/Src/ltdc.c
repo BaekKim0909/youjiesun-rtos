@@ -73,7 +73,7 @@ void MX_LTDC_Init(void)
   pLayerCfg.BlendingFactor2 = LTDC_BLENDING_FACTOR2_CA;
   pLayerCfg.FBStartAdress = 0xC0000000;
   pLayerCfg.ImageWidth = 800;
-  pLayerCfg.ImageHeight = 0;
+  pLayerCfg.ImageHeight = 480;
   pLayerCfg.Backcolor.Blue = 0;
   pLayerCfg.Backcolor.Green = 0;
   pLayerCfg.Backcolor.Red = 0;
@@ -82,7 +82,8 @@ void MX_LTDC_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN LTDC_Init 2 */
-
+	HAL_LTDC_SetWindowPosition(&hltdc, 0, 0, 0);
+	HAL_LTDC_SetWindowSize(&hltdc, 800, 480, 0);
   /* USER CODE END LTDC_Init 2 */
 
 }
@@ -112,13 +113,11 @@ void HAL_LTDC_MspInit(LTDC_HandleTypeDef* ltdcHandle)
     /* LTDC clock enable */
     __HAL_RCC_LTDC_CLK_ENABLE();
 
-    __HAL_RCC_GPIOE_CLK_ENABLE();
     __HAL_RCC_GPIOI_CLK_ENABLE();
     __HAL_RCC_GPIOF_CLK_ENABLE();
     __HAL_RCC_GPIOH_CLK_ENABLE();
     __HAL_RCC_GPIOG_CLK_ENABLE();
     /**LTDC GPIO Configuration
-    PE4     ------> LTDC_B0
     PI9     ------> LTDC_VSYNC
     PI10     ------> LTDC_HSYNC
     PF10     ------> LTDC_DE
@@ -140,13 +139,6 @@ void HAL_LTDC_MspInit(LTDC_HandleTypeDef* ltdcHandle)
     PI6     ------> LTDC_B6
     PI7     ------> LTDC_B7
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_4;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF14_LTDC;
-    HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
-
     GPIO_InitStruct.Pin = GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_0|GPIO_PIN_1
                           |GPIO_PIN_2|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6
                           |GPIO_PIN_7;
@@ -196,7 +188,6 @@ void HAL_LTDC_MspDeInit(LTDC_HandleTypeDef* ltdcHandle)
     __HAL_RCC_LTDC_CLK_DISABLE();
 
     /**LTDC GPIO Configuration
-    PE4     ------> LTDC_B0
     PI9     ------> LTDC_VSYNC
     PI10     ------> LTDC_HSYNC
     PF10     ------> LTDC_DE
@@ -218,8 +209,6 @@ void HAL_LTDC_MspDeInit(LTDC_HandleTypeDef* ltdcHandle)
     PI6     ------> LTDC_B6
     PI7     ------> LTDC_B7
     */
-    HAL_GPIO_DeInit(GPIOE, GPIO_PIN_4);
-
     HAL_GPIO_DeInit(GPIOI, GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_0|GPIO_PIN_1
                           |GPIO_PIN_2|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6
                           |GPIO_PIN_7);
@@ -253,8 +242,6 @@ void ltdc_color_fill(uint16_t sx, uint16_t sy, uint16_t ex, uint16_t ey, uint16_
   addr = ((uint32_t)ltdc_lcd_framebuf + 2 * (800 * psy + psx));
 
   hdma2d.Instance->OOR = offline;
-  /* 启动 DMA2D 前，先清除完成标志 */
-  // dma2d_transfer_complete = 0;
   if (HAL_DMA2D_Start_IT(&hdma2d,
                      (uint32_t)color,
                      addr,
@@ -263,8 +250,7 @@ void ltdc_color_fill(uint16_t sx, uint16_t sy, uint16_t ex, uint16_t ey, uint16_
   {
     /* code */
     /* DMA2D 启动失败时，避免 flush_wait_cb 死等 */
-    // dma2d_transfer_complete = 1;
-    return;
+  	osSemaphoreRelease(ScreenFlushSemaphoreHandle);
   }
 
 

@@ -48,6 +48,10 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
         ${LVGL_SOURCE}
         Core/App/UI/Src/mainUI.c
+        Core/App/UI/Src/header.c
+        Core/App/Task/Src/UITask.c
+        Core/BSP/Src/lcd_screen.c
+        Core/BSP/Src/sdram.c
 )
 
 # Add include paths
@@ -57,6 +61,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
         Middlewares/lvgl/src
         Middlewares/lvgl/porting
         Core/App/UI/Inc
+        Core/BSP/Inc
 )
 
 # Add project symbols (macros)

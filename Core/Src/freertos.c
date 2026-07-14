@@ -54,6 +54,11 @@ const osThreadAttr_t UITask_attributes = {
   .stack_size = 2048 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
+/* Definitions for ScreenFlushSemaphore */
+osSemaphoreId_t ScreenFlushSemaphoreHandle;
+const osSemaphoreAttr_t ScreenFlushSemaphore_attributes = {
+  .name = "ScreenFlushSemaphore"
+};
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -106,6 +111,10 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
   /* USER CODE END RTOS_MUTEX */
+
+  /* Create the semaphores(s) */
+  /* creation of ScreenFlushSemaphore */
+  ScreenFlushSemaphoreHandle = osSemaphoreNew(1, 0, &ScreenFlushSemaphore_attributes);
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */

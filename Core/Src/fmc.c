@@ -69,7 +69,8 @@ void MX_FMC_Init(void)
   }
 
   /* USER CODE BEGIN FMC_Init 2 */
-
+    sdram_initialization_sequence();
+    HAL_SDRAM_ProgramRefreshRate(&hsdram1, 839);
   /* USER CODE END FMC_Init 2 */
 }
 
@@ -181,8 +182,6 @@ static void HAL_FMC_MspInit(void){
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
   /* USER CODE BEGIN FMC_MspInit 1 */
-	sdram_initialization_sequence();
-	HAL_SDRAM_ProgramRefreshRate(&hsdram1, 839);
   /* USER CODE END FMC_MspInit 1 */
 }
 

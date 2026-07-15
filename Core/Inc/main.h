@@ -58,6 +58,26 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define KB_R1_Pin GPIO_PIN_7
+#define KB_R1_GPIO_Port GPIOD
+#define KB_R2_Pin GPIO_PIN_9
+#define KB_R2_GPIO_Port GPIOG
+#define KB_R3_Pin GPIO_PIN_12
+#define KB_R3_GPIO_Port GPIOG
+#define KB_R4_Pin GPIO_PIN_13
+#define KB_R4_GPIO_Port GPIOG
+#define KB_R5_Pin GPIO_PIN_14
+#define KB_R5_GPIO_Port GPIOG
+#define KB_C5_Pin GPIO_PIN_3
+#define KB_C5_GPIO_Port GPIOB
+#define KB_C4_Pin GPIO_PIN_4
+#define KB_C4_GPIO_Port GPIOB
+#define KB_C3_Pin GPIO_PIN_5
+#define KB_C3_GPIO_Port GPIOB
+#define KB_C2_Pin GPIO_PIN_6
+#define KB_C2_GPIO_Port GPIOB
+#define KB_C1_Pin GPIO_PIN_8
+#define KB_C1_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 

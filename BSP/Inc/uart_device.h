@@ -5,12 +5,11 @@
 #ifndef YOUJIESUN_UART_DEVICE_H
 #define YOUJIESUN_UART_DEVICE_H
 #include <stdint.h>
-
+typedef struct UART_Device UART_Device;
 struct UART_Device
 {
     char* name;
-    int (*send_data)(struct UART_Device *pUart_device,const uint8_t *datas,uint16_t length); // 发送
-    uint32_t timeout;
-    void *target_uart;
+    int (*send_data)(UART_Device *pUart_device,const uint8_t *datas,uint16_t length,uint32_t timeout); // 发送函数
+    void *uart_data;
 };
 #endif //YOUJIESUN_UART_DEVICE_H

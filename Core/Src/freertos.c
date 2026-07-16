@@ -59,6 +59,11 @@ osSemaphoreId_t ScreenFlushSemaphoreHandle;
 const osSemaphoreAttr_t ScreenFlushSemaphore_attributes = {
   .name = "ScreenFlushSemaphore"
 };
+/* Definitions for uart_tx_fpga_semaphore */
+osSemaphoreId_t uart_tx_fpga_semaphoreHandle;
+const osSemaphoreAttr_t uart_tx_fpga_semaphore_attributes = {
+  .name = "uart_tx_fpga_semaphore"
+};
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -142,6 +147,9 @@ void MX_FREERTOS_Init(void) {
   /* Create the semaphores(s) */
   /* creation of ScreenFlushSemaphore */
   ScreenFlushSemaphoreHandle = osSemaphoreNew(1, 0, &ScreenFlushSemaphore_attributes);
+
+  /* creation of uart_tx_fpga_semaphore */
+  uart_tx_fpga_semaphoreHandle = osSemaphoreNew(1, 0, &uart_tx_fpga_semaphore_attributes);
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */

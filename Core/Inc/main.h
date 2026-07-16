@@ -37,6 +37,7 @@ extern "C" {
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
 extern osSemaphoreId_t ScreenFlushSemaphoreHandle;
+extern osSemaphoreId_t uart_tx_fpga_semaphoreHandle;
 extern TIM_HandleTypeDef htim2;
 extern UART_HandleTypeDef huart4;
 extern UART_HandleTypeDef huart2;

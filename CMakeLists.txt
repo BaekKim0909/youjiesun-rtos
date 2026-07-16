@@ -44,24 +44,25 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 
 # Add sources to executable
 file(GLOB_RECURSE LVGL_SOURCE "Middlewares/lvgl/*.c")
-file(GLOB_RECURSE IMG_SOURCE "Core/App/UI/Source/Img/*.c")
-file(GLOB_RECURSE FONT_SOURCE "Core/App/UI/Source/Font/*.c")
+file(GLOB_RECURSE IMG_SOURCE "App/UI/Source/Img/*.c")
+file(GLOB_RECURSE FONT_SOURCE "App/UI/Source/Font/*.c")
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
         ${LVGL_SOURCE}
         ${IMG_SOURCE}
         ${FONT_SOURCE}
-        Core/App/UI/Source/Font/chinese_character_16.c
-        Core/App/UI/Source/Font/chinese_character_20.c
-        Core/App/UI/Source/Font/chinese_character_24.c
-        Core/App/UI/Src/mainUI.c
-        Core/App/UI/Src/header.c
-        Core/App/UI/Src/footer.c
-        Core/App/UI/Style/Src/style_g.c
-        Core/App/Task/Src/UITask.c
-        Core/BSP/Src/lcd_screen.c
-        Core/BSP/Src/sdram.c
-        Core/BSP/Src/keypad.c
+        App/UI/Source/Font/chinese_character_16.c
+        App/UI/Source/Font/chinese_character_20.c
+        App/UI/Source/Font/chinese_character_24.c
+        App/UI/Src/mainUI.c
+        App/UI/Src/header.c
+        App/UI/Src/footer.c
+        App/UI/Style/Src/style_g.c
+        App/Task/Src/UITask.c
+        BSP/Src/lcd_screen.c
+        BSP/Src/sdram.c
+        BSP/Src/keypad.c
+        BSP/Src/uart_device.c
 )
 
 # Add include paths
@@ -70,9 +71,9 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
         Middlewares/lvgl
         Middlewares/lvgl/src
         Middlewares/lvgl/porting
-        Core/App/UI/Inc
-        Core/App/UI/Style/Inc
-        Core/BSP/Inc
+        App/UI/Inc
+        App/UI/Style/Inc
+        BSP/Inc
 )
 
 # Add project symbols (macros)

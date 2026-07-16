@@ -38,6 +38,8 @@ extern "C" {
 /* USER CODE BEGIN ET */
 extern osSemaphoreId_t ScreenFlushSemaphoreHandle;
 extern TIM_HandleTypeDef htim2;
+extern UART_HandleTypeDef huart4;
+extern UART_HandleTypeDef huart2;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/

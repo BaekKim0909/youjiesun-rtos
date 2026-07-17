@@ -59,6 +59,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
         App/UI/Src/footer.c
         App/UI/Style/Src/style_g.c
         App/Task/Src/UITask.c
+        App/Task/Src/CommunicateTask.c
         BSP/Src/lcd_screen.c
         BSP/Src/sdram.c
         BSP/Src/keypad.c

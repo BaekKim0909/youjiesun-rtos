@@ -54,15 +54,17 @@ const osThreadAttr_t UITask_attributes = {
   .stack_size = 2048 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
+/* Definitions for CommunictaeTask */
+osThreadId_t CommunictaeTaskHandle;
+const osThreadAttr_t CommunictaeTask_attributes = {
+  .name = "CommunictaeTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityAboveNormal,
+};
 /* Definitions for ScreenFlushSemaphore */
 osSemaphoreId_t ScreenFlushSemaphoreHandle;
 const osSemaphoreAttr_t ScreenFlushSemaphore_attributes = {
   .name = "ScreenFlushSemaphore"
-};
-/* Definitions for uart_tx_fpga_semaphore */
-osSemaphoreId_t uart_tx_fpga_semaphoreHandle;
-const osSemaphoreAttr_t uart_tx_fpga_semaphore_attributes = {
-  .name = "uart_tx_fpga_semaphore"
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -71,6 +73,7 @@ const osSemaphoreAttr_t uart_tx_fpga_semaphore_attributes = {
 /* USER CODE END FunctionPrototypes */
 
 void StartUITask(void *argument);
+void StartCommunictaeTask(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -148,9 +151,6 @@ void MX_FREERTOS_Init(void) {
   /* creation of ScreenFlushSemaphore */
   ScreenFlushSemaphoreHandle = osSemaphoreNew(1, 0, &ScreenFlushSemaphore_attributes);
 
-  /* creation of uart_tx_fpga_semaphore */
-  uart_tx_fpga_semaphoreHandle = osSemaphoreNew(1, 0, &uart_tx_fpga_semaphore_attributes);
-
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */
   /* USER CODE END RTOS_SEMAPHORES */
@@ -166,6 +166,9 @@ void MX_FREERTOS_Init(void) {
   /* Create the thread(s) */
   /* creation of UITask */
   UITaskHandle = osThreadNew(StartUITask, NULL, &UITask_attributes);
+
+  /* creation of CommunictaeTask */
+  CommunictaeTaskHandle = osThreadNew(StartCommunictaeTask, NULL, &CommunictaeTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -193,6 +196,24 @@ __weak void StartUITask(void *argument)
     osDelay(1);
   }
   /* USER CODE END StartUITask */
+}
+
+/* USER CODE BEGIN Header_StartCommunictaeTask */
+/**
+* @brief Function implementing the CommunictaeTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartCommunictaeTask */
+__weak void StartCommunictaeTask(void *argument)
+{
+  /* USER CODE BEGIN StartCommunictaeTask */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END StartCommunictaeTask */
 }
 
 /* Private application code --------------------------------------------------*/

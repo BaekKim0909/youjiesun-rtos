@@ -217,7 +217,7 @@ static int stm32_uart_send(const UART_Device *uart_device_p, const uint8_t *data
         return -1;
     }
 
-    if (xSemaphoreTake(uart_data->tx_semaphore, pdMS_TO_TICKS(timeout)) != pdTRUE)
+    if (xSemaphoreTake(uart_data->tx_semaphore, timeout) != pdTRUE)
     {
         (void)HAL_UART_AbortTransmit(uart_data->uart_handle);
         return -1;
@@ -335,10 +335,20 @@ static uint16_t ringBuffer_get_remainLength(const Ring_Buffer *ring_buffer)
 
 /**
  * @brief 将DMA本次收到的一整块数据写入软件环形缓冲区
+ * @param ring_buffer 目标环形缓冲区
+ * @param data DMA临时接收缓冲区中的有效数据起始地址
+ * @param length 本次需要写入的字节数
  * @return 成功返回length，空间不足或参数错误返回0
  *
- * 采用“全写或全不写”策略，不能只写半个DMA块，否则会把一包协议数据人为截断。
- * 如果写入跨越数组末尾，第一段写到末尾，第二段从buffer[0]继续写。
+ * 写入策略：
+ * 1. 先检查参数和剩余空间，空间不足时直接返回0，不写入任何字节；
+ * 2. 使用当前write_index作为写入起点；
+ * 3. 如果从write_index到数组末尾足够放下length字节，只需要复制一次；
+ * 4. 如果放不下，则先复制第一段到数组末尾，再从buffer[0]开始复制第二段；
+ * 5. 数据全部复制完成后，最后再更新write_index，把新数据一次性发布给读取任务。
+ *
+ * 这里采用“全写或全不写”策略，不能只写半个DMA块，否则可能把一包协议数据人为截断。
+ * 环形缓冲区永久保留一个空槽，所以write_index追上read_index时表示空，不表示满。
  */
 static uint16_t ringBuffer_write(Ring_Buffer *ring_buffer, const uint8_t *data, uint16_t length)
 {
@@ -347,31 +357,40 @@ static uint16_t ringBuffer_write(Ring_Buffer *ring_buffer, const uint8_t *data, 
     uint16_t second_length;
     uint16_t new_write_index;
 
+    // 参数无效或本次没有数据时，不修改环形缓冲区状态
     if (ring_buffer == NULL || ring_buffer->buffer == NULL || data == NULL || length == 0U)
     {
         return 0;
     }
 
+    // 剩余空间不足时整块丢弃，避免只写入半包数据导致后续解析错位
     if (ringBuffer_get_remainLength(ring_buffer) < length)
     {
         return 0;
     }
 
-    // 先使用局部索引完成全部复制，最后再一次性发布新的write_index
+    // 先记录当前写指针，后续复制都基于局部变量计算，避免提前暴露未写完的数据
     write_index = ring_buffer->write_index;
+
+    // 第一段最多写到物理数组末尾；如果本次数据没跨尾部，first_length就是length
     first_length = (uint16_t)(ring_buffer->buffer_size - write_index);
     if (first_length > length)
     {
         first_length = length;
     }
+
+    // 第二段表示跨过数组末尾后，需要从buffer[0]继续写入的字节数
     second_length = (uint16_t)(length - first_length);
 
+    // 复制第一段：[write_index, write_index + first_length)
     memcpy(ring_buffer->buffer + write_index, data, first_length);
     if (second_length > 0U)
     {
+        // 发生回绕时，复制第二段到数组头部：[0, second_length)
         memcpy(ring_buffer->buffer, data + first_length, second_length);
     }
 
+    // 写指针前进length字节，超过数组末尾时通过取模回到数组头部
     new_write_index = (uint16_t)(((uint32_t)write_index + length) % ring_buffer->buffer_size);
 
     // 保证数据内容先写入RAM，再让任务看到新的write_index
@@ -516,14 +535,12 @@ static uint16_t modbus_crc16(const uint8_t *data, uint16_t length)
  */
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
-    UART_Data *uart_data = fpga_device.uart_data;
+    UART_Data *fpga_uart_data = fpga_device.uart_data;
     BaseType_t higher_priority_task_woken = pdFALSE;
 
-    if (uart_data != NULL
-        && huart == uart_data->uart_handle
-        && uart_data->tx_semaphore != NULL)
+    if (huart == fpga_uart_data->uart_handle)
     {
-        xSemaphoreGiveFromISR(uart_data->tx_semaphore, &higher_priority_task_woken);
+        xSemaphoreGiveFromISR(fpga_uart_data->tx_semaphore, &higher_priority_task_woken);
         portYIELD_FROM_ISR(higher_priority_task_woken);
     }
 }
@@ -541,45 +558,40 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
  */
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size)
 {
-    UART_Data *uart_data = fpga_device.uart_data;
+    UART_Data *fpga_uart_data = fpga_device.uart_data;
     BaseType_t higher_priority_task_woken = pdFALSE;
     HAL_UART_RxEventTypeTypeDef event_type;
     uint16_t written_length;
-
-    if (uart_data == NULL || huart != uart_data->uart_handle)
-    {
-        return;
-    }
-
-    // HT半传输事件已关闭；这里只处理线路空闲IDLE和DMA缓冲区收满TC
     event_type = HAL_UARTEx_GetRxEventType(huart);
-    if (event_type != HAL_UART_RXEVENT_IDLE && event_type != HAL_UART_RXEVENT_TC)
-    {
-        return;
+    if (huart == fpga_uart_data->uart_handle) {
+        if (event_type == HAL_UART_RXEVENT_IDLE ||  event_type == HAL_UART_RXEVENT_TC)
+        {
+            // 环形缓冲区空间不足时整块拒绝，并通过计数器记录本次丢块
+            written_length = fpga_ring_buffer.buffer_write(
+                &fpga_ring_buffer,
+                fpga_uart_data->rx_datas,
+                size
+            );
+
+            if (written_length != size)
+            {
+                fpga_uart_data->rx_overflow_count++;
+            }
+
+            // Normal DMA在IDLE或TC后停止，因此必须立即重新挂接下一轮接收
+            if (stm32_uart_start_receive(fpga_uart_data) != HAL_OK)
+            {
+                fpga_uart_data->rx_restart_error_count++;
+            }
+
+            // 通知只表示“可能有新数据”，任务醒来后需要循环取出所有完整包
+            if (fpga_uart_data->rx_task_handle != NULL)
+            {
+                vTaskNotifyGiveFromISR(fpga_uart_data->rx_task_handle, &higher_priority_task_woken);
+                portYIELD_FROM_ISR(higher_priority_task_woken);
+            }
+        }
     }
 
-    // 环形缓冲区空间不足时整块拒绝，并通过计数器记录本次丢块
-    written_length = fpga_ring_buffer.buffer_write(
-        &fpga_ring_buffer,
-        uart_data->rx_datas,
-        size
-    );
 
-    if (written_length != size)
-    {
-        uart_data->rx_overflow_count++;
-    }
-
-    // Normal DMA在IDLE或TC后停止，因此必须立即重新挂接下一轮接收
-    if (stm32_uart_start_receive(uart_data) != HAL_OK)
-    {
-        uart_data->rx_restart_error_count++;
-    }
-
-    // 通知只表示“可能有新数据”，任务醒来后需要循环取出所有完整包
-    if (uart_data->rx_task_handle != NULL)
-    {
-        vTaskNotifyGiveFromISR(uart_data->rx_task_handle, &higher_priority_task_woken);
-        portYIELD_FROM_ISR(higher_priority_task_woken);
-    }
 }

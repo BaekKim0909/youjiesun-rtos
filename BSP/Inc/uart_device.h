@@ -9,6 +9,11 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
+#define FPGA_TX_EVENT  (1UL << 8)
+#define FPGA_RX_EVENT  (1UL << 9)
+
+
+
 typedef struct UART_Device UART_Device;
 
 /**

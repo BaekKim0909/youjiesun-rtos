@@ -4,7 +4,6 @@
 
 #include "../Inc/uart_device.h"
 
-#include <stddef.h>
 #include <string.h>
 
 #include "main.h"
@@ -560,12 +559,11 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size)
 {
     UART_Data *fpga_uart_data = fpga_device.uart_data;
     BaseType_t higher_priority_task_woken = pdFALSE;
-    HAL_UART_RxEventTypeTypeDef event_type;
-    uint16_t written_length;
-    event_type = HAL_UARTEx_GetRxEventType(huart);
+    HAL_UART_RxEventTypeTypeDef event_type = HAL_UARTEx_GetRxEventType(huart);
     if (huart == fpga_uart_data->uart_handle) {
         if (event_type == HAL_UART_RXEVENT_IDLE ||  event_type == HAL_UART_RXEVENT_TC)
         {
+            uint16_t written_length;
             // 环形缓冲区空间不足时整块拒绝，并通过计数器记录本次丢块
             written_length = fpga_ring_buffer.buffer_write(
                 &fpga_ring_buffer,
@@ -587,7 +585,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size)
             // 通知只表示“可能有新数据”，任务醒来后需要循环取出所有完整包
             if (fpga_uart_data->rx_task_handle != NULL)
             {
-                vTaskNotifyGiveFromISR(fpga_uart_data->rx_task_handle, &higher_priority_task_woken);
+                xTaskNotifyFromISR(fpga_uart_data->rx_task_handle,FPGA_RX_EVENT,eSetBits,&higher_priority_task_woken);
                 portYIELD_FROM_ISR(higher_priority_task_woken);
             }
         }

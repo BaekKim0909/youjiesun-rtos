@@ -47,6 +47,8 @@ void StartCommunictaeTask(void *argument)
         // 通知值中有FPGA串口接收事件标志位
         if (event_data & FPGA_RX_EVENT)
         {
+            // 一次通知不等于一包数据：可能是半包，也可能是多个粘包
+            // 因此持续调用get_command，直到环形缓冲区暂时没有完整包为止
             while ((command_length = fpga_device.get_command(
                    &fpga_device,
                    command_buffer,
@@ -64,8 +66,5 @@ void StartCommunictaeTask(void *argument)
         {
 
         }
-        // 一次通知不等于一包数据：可能是半包，也可能是多个粘包
-        // 因此持续调用get_command，直到环形缓冲区暂时没有完整包为止
-
     }
 }

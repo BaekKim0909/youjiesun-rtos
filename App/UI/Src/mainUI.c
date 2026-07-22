@@ -2,7 +2,7 @@
 #include "cmsis_os.h"
 #include "lv_port_disp.h"
 #include "lcd_screen.h"
-#include "system_structs.h"
+#include "../../System/Inc/system_structs.h"
 #include "header.h"
 #include "footer.h"
 #include "style_g.h"

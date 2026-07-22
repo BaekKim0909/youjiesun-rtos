@@ -3,7 +3,7 @@
 //
 
 #include "header.h"
-#include "system_structs.h"
+#include "../../System/Inc/system_structs.h"
 #include "main.h"
 
 LV_IMAGE_DECLARE(LidOpen);
@@ -20,15 +20,15 @@ LV_FONT_DECLARE(chinese_character_20);
 extern RTC_HandleTypeDef hrtc;
 extern Setting_t user_setting_g;
 extern Setting_t default_setting_g;
-
+extern DeviceState_t device_state;
+extern float current_temperature_g;
 RTC_DateTypeDef CurrentDate; // 当前日期
 RTC_TimeTypeDef CurrentTime; // 当前时间
 
 static lv_obj_t * header = NULL;
 static lv_timer_t *update_time_timer_g = NULL;
 static lv_timer_t *update_temperature_timer_g = NULL;
-volatile DeviceState_t device_state = {0};               // 设备状态
-volatile float current_temperature_g = 40.5;             // 当前油温
+
 // 暴露外部引用
 lv_obj_t *header_get()
 {

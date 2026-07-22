@@ -6,8 +6,6 @@
 #define YOUJIESUN_HEADER_H
 #include "lvgl.h"
 /*   */
-extern volatile float current_temperature_g;
-
 lv_obj_t *header_get(void);
 void header_init(void);
 void header_load(void);

@@ -60,6 +60,8 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
         App/UI/Style/Src/style_g.c
         App/Task/Src/UITask.c
         App/Task/Src/CommunicateTask.c
+        App/Communication/Src/fpga_comm.c
+        App/System/Src/system_state.c
         BSP/Src/lcd_screen.c
         BSP/Src/sdram.c
         BSP/Src/keypad.c
@@ -74,6 +76,8 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
         Middlewares/lvgl/porting
         App/UI/Inc
         App/UI/Style/Inc
+        App/Communication/Inc
+        App/System/Inc
         BSP/Inc
 )
 

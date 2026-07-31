@@ -53,24 +53,7 @@ typedef struct
     uint8_t rx_datas[RECEIVE_BUFFER_SIZE_OF_FPGA];
 } UART_Data;
 
-typedef struct Ring_Buffer Ring_Buffer;
 
-/** 环形缓冲区数据 */
-struct Ring_Buffer
-{
-    // 环形缓冲区数组
-    uint8_t *buffer;
-    // 环形缓冲区物理长度，实际可用容量为buffer_size - 1
-    uint16_t buffer_size;
-    // 缓冲区读索引，仅由任务更新
-    volatile uint16_t read_index;
-    // 缓冲区写索引，仅由中断更新
-    volatile uint16_t write_index;
-    // 缓冲区写入函数
-    uint16_t (*buffer_write)(Ring_Buffer *ring_buffer, const uint8_t *data, uint16_t length);
-    // 获取一包完整且CRC正确的指令
-    uint16_t (*command_get)(Ring_Buffer *ring_buffer, uint8_t *command, uint16_t command_capacity);
-};
 
 static void ringBuffer_add_readIndex(Ring_Buffer *ring_buffer, uint16_t length);
 static uint8_t ringBuffer_read(const Ring_Buffer *ring_buffer, uint16_t index);

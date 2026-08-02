@@ -63,6 +63,8 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define W25Q256_CS_Pin GPIO_PIN_6
+#define W25Q256_CS_GPIO_Port GPIOF
 #define KB_R1_Pin GPIO_PIN_7
 #define KB_R1_GPIO_Port GPIOD
 #define KB_R2_Pin GPIO_PIN_9

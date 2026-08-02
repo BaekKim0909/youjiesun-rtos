@@ -2,7 +2,7 @@
 // Created by 74222 on 2026/7/16.
 //
 
-#include "../Inc/uart_device.h"
+#include "../Inc/bsp_uart_device.h"
 
 #include <string.h>
 

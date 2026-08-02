@@ -1,6 +1,6 @@
 #include "FreeRTOS.h"
 #include "task.h"
-#include "uart_device.h"
+#include "bsp_uart_device.h"
 
 //
 // Created by 74222 on 2026/7/17.

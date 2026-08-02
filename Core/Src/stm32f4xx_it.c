@@ -58,6 +58,7 @@
 extern DMA2D_HandleTypeDef hdma2d;
 extern DMA_HandleTypeDef hdma_spi5_rx;
 extern DMA_HandleTypeDef hdma_spi5_tx;
+extern SPI_HandleTypeDef hspi5;
 extern DMA_HandleTypeDef hdma_uart4_tx;
 extern DMA_HandleTypeDef hdma_uart4_rx;
 extern DMA_HandleTypeDef hdma_usart2_rx;
@@ -292,6 +293,20 @@ void DMA2_Stream4_IRQHandler(void)
   /* USER CODE BEGIN DMA2_Stream4_IRQn 1 */
 
   /* USER CODE END DMA2_Stream4_IRQn 1 */
+}
+
+/**
+  * @brief This function handles SPI5 global interrupt.
+  */
+void SPI5_IRQHandler(void)
+{
+  /* USER CODE BEGIN SPI5_IRQn 0 */
+
+  /* USER CODE END SPI5_IRQn 0 */
+  HAL_SPI_IRQHandler(&hspi5);
+  /* USER CODE BEGIN SPI5_IRQn 1 */
+
+  /* USER CODE END SPI5_IRQn 1 */
 }
 
 /**

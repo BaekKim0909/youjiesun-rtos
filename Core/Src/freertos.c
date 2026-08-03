@@ -45,7 +45,8 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-
+/* SPI5发送完成信号量 */
+SemaphoreHandle_t spi5_tx_semaphore;
 /* USER CODE END Variables */
 /* Definitions for UITask */
 osThreadId_t UITaskHandle;
@@ -153,6 +154,11 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   /* add semaphores, ... */
+  spi5_tx_semaphore = xSemaphoreCreateBinary();
+  if (spi5_tx_semaphore != NULL)
+  {
+    vQueueAddToRegistry(spi5_tx_semaphore, "SPI5 TX Semaphore");
+  }
   /* USER CODE END RTOS_SEMAPHORES */
 
   /* USER CODE BEGIN RTOS_TIMERS */

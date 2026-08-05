@@ -6,7 +6,7 @@
 // Created by 74222 on 2026/7/17.
 //
 
-// 当前DMA单次接收缓冲区为128字节，完整包输出缓冲区保持相同容量
+// 当前DMA单次接收缓冲区为128Byte，完整包输出缓冲区保持相同容量
 #define FPGA_COMMAND_BUFFER_SIZE 128U
 
 extern UART_Device fpga_device;

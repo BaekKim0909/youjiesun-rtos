@@ -47,6 +47,10 @@
 /* USER CODE BEGIN Variables */
 /* SPI5发送完成信号量 */
 SemaphoreHandle_t spi5_tx_semaphore;
+/* SPI5接收完成信号量 */
+SemaphoreHandle_t spi5_rx_semaphore;
+/* SPI5发送并接收信号量 */
+SemaphoreHandle_t spi5_tx_rx_semaphore;
 /* USER CODE END Variables */
 /* Definitions for UITask */
 osThreadId_t UITaskHandle;
@@ -159,6 +163,8 @@ void MX_FREERTOS_Init(void) {
   {
     vQueueAddToRegistry(spi5_tx_semaphore, "SPI5 TX Semaphore");
   }
+  spi5_rx_semaphore = xSemaphoreCreateBinary();
+  spi5_tx_rx_semaphore = xSemaphoreCreateBinary();
   /* USER CODE END RTOS_SEMAPHORES */
 
   /* USER CODE BEGIN RTOS_TIMERS */

@@ -16,17 +16,7 @@ static int read( long offset, uint8_t* buf, size_t size );
 static int write( long offset, const uint8_t* buf, size_t size );
 static int erase( long offset, size_t size );
 
-// 获取 sector号
-static int get_sector(uint32_t address)
-{
-    uint32_t sector = 0;
-    if ( address < W25Q256_END_ADDR && address >= W25Q256_START_ADDR ) {
-        address -= W25Q256_START_ADDR;
-        sector = address / W25Q256_SECTOR_SIZE;
-        return sector;
-    }
-    return -1;
-}
+
 static uint32_t judge_whether_erase( uint8_t* sector_buf, uint16_t len )
 {
     uint8_t* p = sector_buf;
@@ -119,7 +109,7 @@ static int write( long offset, const uint8_t* buf, size_t size )
             max_write_len = ( addr_up - addr );
             write_len     = size >= max_write_len ? max_write_len : size;
             if ( judge_whether_erase( read_sector_buf + addr - cur_addr, write_len ) ){
-                W25Q256_erase_sector( get_sector( cur_addr ) );
+                W25Q256_erase_sector( cur_addr );
                 memcpy( read_sector_buf + ( addr - cur_addr ), buf, write_len );
                 write_sector( cur_addr, read_sector_buf, W25Q256_SECTOR_SIZE );
             }
@@ -136,7 +126,7 @@ static int write( long offset, const uint8_t* buf, size_t size )
             write_len     = write_len >= max_write_len ? max_write_len : write_len;
             if ( judge_whether_erase( read_sector_buf,  write_len ) ) {
                 memcpy( read_sector_buf, buf, write_len );
-                W25Q256_erase_sector( get_sector( cur_addr ) );
+                W25Q256_erase_sector( cur_addr );
                 write_sector( cur_addr, read_sector_buf, W25Q256_SECTOR_SIZE );
             }
             else {
@@ -145,7 +135,7 @@ static int write( long offset, const uint8_t* buf, size_t size )
         }
         //中间扇区写 直接擦除
         else {
-            W25Q256_erase_sector( get_sector( cur_addr ) );
+            W25Q256_erase_sector( cur_addr );
             write_sector( cur_addr, buf, W25Q256_SECTOR_SIZE );
             buf += W25Q256_SECTOR_SIZE;
         }
@@ -157,7 +147,6 @@ static int write( long offset, const uint8_t* buf, size_t size )
 
 static int erase( long offset, size_t size )
 {
-    int32_t  cur_erase_sector;
     uint32_t addr      = W25Q256_START_ADDR + offset;
     uint32_t addr_down = FAL_ALIGN_DOWN( addr, W25Q256_SECTOR_SIZE );
 
@@ -165,12 +154,14 @@ static int erase( long offset, size_t size )
     uint32_t addr_end_up = FAL_ALIGN_UP( addr_end, W25Q256_SECTOR_SIZE );
     uint32_t cur_addr    = addr_down;
 
+    if ( addr_end_up > W25Q256_END_ADDR ) {
+        return -1;
+    }
+
     while ( cur_addr < addr_end_up ) {
-        cur_erase_sector = get_sector( cur_addr );
-        if ( cur_erase_sector == -1 ) {
-            return cur_addr - addr;
+        if ( W25Q256_erase_sector( cur_addr ) != 1 ) {
+            return -1;
         }
-        W25Q256_erase_sector( cur_erase_sector );
         cur_addr += W25Q256_SECTOR_SIZE;
     }
     return size;

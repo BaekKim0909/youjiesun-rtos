@@ -44,11 +44,13 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 
 # Add sources to executable
 file(GLOB_RECURSE LVGL_SOURCE "Middlewares/lvgl/*.c")
+file(GLOB_RECURSE FAL_SOURCE "Middlewares/fal/*.c")
 file(GLOB_RECURSE IMG_SOURCE "App/UI/Source/Img/*.c")
 file(GLOB_RECURSE FONT_SOURCE "App/UI/Source/Font/*.c")
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
         ${LVGL_SOURCE}
+        ${FAL_SOURCE}
         ${IMG_SOURCE}
         ${FONT_SOURCE}
         App/UI/Source/Font/chinese_character_16.c
@@ -76,6 +78,8 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
         Middlewares/lvgl
         Middlewares/lvgl/src
         Middlewares/lvgl/porting
+        Middlewares/fal/inc
+        Middlewares/fal/porting
         App/UI/Inc
         App/UI/Style/Inc
         App/Communication/Inc

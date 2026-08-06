@@ -26,9 +26,14 @@ static int spi_w25q256_init(SPI_Device *device_p);
 static void spi_w25q256_cs_assert(const SPI_Device *device_p);
 // W25Q256 片选 取消选中
 static void spi_w25q256_cs_deassert(const SPI_Device *device_p);
-// SPI 发送数据
+// SPI5 发送数据
 static int spi_w25q256_transmit_data(const SPI_Device *device_p, const uint8_t *datas, uint16_t length, uint32_t timeout);
-// SPI 发送并接收数据
+/*
+ * @brief   SPI5 接收数据
+ * @return  接收到的字节长度
+ */
+static int spi_w25q256_receive_data(const SPI_Device *device_p, uint8_t *datas, uint16_t length, uint32_t timeout);
+// SPI5 发送并接收数据
 static int spi_w25q256_transmit_receive_data(const SPI_Device *device_p, uint8_t *t_data, uint8_t *r_data ,uint16_t length, uint32_t timeout);
 SPI_Data w25q256_data = {
     .spi_handle = &hspi5,
@@ -42,6 +47,7 @@ SPI_Device w25q256_spi_device = {
     .spi_cs_assert = spi_w25q256_cs_assert,
     .spi_cs_deassert = spi_w25q256_cs_deassert,
     .transmit_data = spi_w25q256_transmit_data,
+    .receive_data = spi_w25q256_receive_data,
     .transmit_receive_data = spi_w25q256_transmit_receive_data,
     .spi_data = &w25q256_data
 };
@@ -55,6 +61,7 @@ static int spi_w25q256_init(SPI_Device *device_p)
         return -1;
     }
     spi_data->tx_semaphore = spi5_tx_semaphore;
+    spi_data->rx_semaphore = spi5_rx_semaphore;
     spi_data->tx_rx_semaphore = spi5_tx_rx_semaphore;
     return 1;
 }
@@ -80,12 +87,24 @@ static int spi_w25q256_transmit_data(const SPI_Device *device_p, const uint8_t *
 
     if (pdTRUE != xSemaphoreTake(spi_data->tx_semaphore,timeout))
     {
+        HAL_SPI_Abort(spi_data->spi_handle);
         return -1;  // 超时
     }
     return length;       // 成功 返回发送长度
 }
 static int spi_w25q256_receive_data(const SPI_Device *device_p, uint8_t *datas, uint16_t length, uint32_t timeout)
 {
+    SPI_Data* spi_data = device_p->spi_data;
+    xSemaphoreTake(spi_data->rx_semaphore,0);
+    if (HAL_OK != HAL_SPI_Receive_DMA(spi_data->spi_handle,datas,length))
+    {
+        return 0; // 启动DMA接收失败
+    }
+    if (pdTRUE != xSemaphoreTake(spi_data->rx_semaphore,timeout))
+    {
+        return -1;
+    }
+    return length;
 }
 static int spi_w25q256_transmit_receive_data(const SPI_Device *device_p, uint8_t *t_data, uint8_t *r_data ,uint16_t length, uint32_t timeout)
 {
@@ -110,6 +129,28 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
     if (hspi == w25q256_spi_data->spi_handle)
     {
         xSemaphoreGiveFromISR(w25q256_spi_data->tx_semaphore,&higher_priority_task_woken);
+        portYIELD_FROM_ISR(higher_priority_task_woken);
+    }
+}
+// SPI 接收完成回调
+void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
+{
+    SPI_Data *w25q256_spi_data = w25q256_spi_device.spi_data;
+    BaseType_t higher_priority_task_woken = pdFALSE;
+    if (hspi == w25q256_spi_data->spi_handle)
+    {
+        xSemaphoreGiveFromISR(w25q256_spi_data->rx_semaphore,&higher_priority_task_woken);
+        portYIELD_FROM_ISR(higher_priority_task_woken);
+    }
+}
+// SPI 发送接收完成回调
+void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
+{
+    SPI_Data *w25q256_spi_data = w25q256_spi_device.spi_data;
+    BaseType_t higher_priority_task_woken = pdFALSE;
+    if (hspi == w25q256_spi_data->spi_handle)
+    {
+        xSemaphoreGiveFromISR(w25q256_spi_data->tx_rx_semaphore,&higher_priority_task_woken);
         portYIELD_FROM_ISR(higher_priority_task_woken);
     }
 }

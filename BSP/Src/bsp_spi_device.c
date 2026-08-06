@@ -55,8 +55,14 @@ SPI_Device w25q256_spi_device = {
 
 static int spi_w25q256_init(SPI_Device *device_p)
 {
-    SPI_Data* spi_data =  device_p->spi_data;
-    if (device_p == NULL || spi_data == NULL)
+    if (device_p == NULL)
+    {
+        return -1;
+    }
+
+    SPI_Data *spi_data = device_p->spi_data;
+
+    if (spi_data == NULL)
     {
         return -1;
     }
@@ -102,7 +108,8 @@ static int spi_w25q256_receive_data(const SPI_Device *device_p, uint8_t *datas, 
     }
     if (pdTRUE != xSemaphoreTake(spi_data->rx_semaphore,timeout))
     {
-        return -1;
+        HAL_SPI_Abort(spi_data->spi_handle);
+        return -1; // 超时
     }
     return length;
 }
@@ -116,6 +123,7 @@ static int spi_w25q256_transmit_receive_data(const SPI_Device *device_p, uint8_t
     }
     if (pdTRUE != xSemaphoreTake(spi_data->tx_rx_semaphore,timeout))
     {
+        HAL_SPI_Abort(spi_data->spi_handle);
         return -1; // 超时
     }
     return length;

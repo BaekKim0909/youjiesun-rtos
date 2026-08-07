@@ -1,6 +1,7 @@
 #include "mainUI.h"
 #include "cmsis_os.h"
 #include "lv_port_disp.h"
+#include "lv_port_indev.h"
 #include "lcd_screen.h"
 #include "../../System/Inc/system_structs.h"
 #include "header.h"
@@ -18,6 +19,8 @@ void lvgl_init()
     lv_tick_set_cb(xTaskGetTickCount);
 	// 屏幕接口初始化
     lv_port_disp_init();
+    // 按键输入接口初始化
+    lv_port_indev_init();
 }
 // 首次加载
 void ui_first_load()

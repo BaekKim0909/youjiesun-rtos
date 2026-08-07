@@ -59,10 +59,10 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(W25Q256_CS_GPIO_Port, W25Q256_CS_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(KB_R1_GPIO_Port, KB_R1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(KB_R1_GPIO_Port, KB_R1_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOG, KB_R2_Pin|KB_R3_Pin|KB_R4_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOG, KB_R2_Pin|KB_R3_Pin|KB_R4_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin : W25Q256_CS_Pin */
   GPIO_InitStruct.Pin = W25Q256_CS_Pin;

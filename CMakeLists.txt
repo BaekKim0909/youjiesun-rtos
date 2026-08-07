@@ -62,12 +62,13 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
         App/UI/Style/Src/style_g.c
         App/Task/Src/UITask.c
         App/Task/Src/CommunicateTask.c
+        App/Task/Src/KeyScanTask.c
         App/Communication/Src/fpga_comm.c
         App/System/Src/system_state.c
         Drivers/Src/W25Q256.c
         BSP/Src/lcd_screen.c
         BSP/Src/sdram.c
-        BSP/Src/keypad.c
+        BSP/Src/bsp_matrix_key.c
         BSP/Src/bsp_uart_device.c
         BSP/Src/bsp_spi_device.c
 )

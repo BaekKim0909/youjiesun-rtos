@@ -45,12 +45,14 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
+
 /* SPI5发送完成信号量 */
 SemaphoreHandle_t spi5_tx_semaphore;
 /* SPI5接收完成信号量 */
 SemaphoreHandle_t spi5_rx_semaphore;
 /* SPI5发送并接收信号量 */
 SemaphoreHandle_t spi5_tx_rx_semaphore;
+
 /* USER CODE END Variables */
 /* Definitions for UITask */
 osThreadId_t UITaskHandle;
@@ -66,6 +68,13 @@ const osThreadAttr_t CommunictaeTask_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityAboveNormal,
 };
+/* Definitions for KeyScanTask */
+osThreadId_t KeyScanTaskHandle;
+const osThreadAttr_t KeyScanTask_attributes = {
+  .name = "KeyScanTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal1,
+};
 /* Definitions for ScreenFlushSemaphore */
 osSemaphoreId_t ScreenFlushSemaphoreHandle;
 const osSemaphoreAttr_t ScreenFlushSemaphore_attributes = {
@@ -79,6 +88,7 @@ const osSemaphoreAttr_t ScreenFlushSemaphore_attributes = {
 
 void StartUITask(void *argument);
 void StartCommunictaeTask(void *argument);
+void StartKeyScanTask(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -182,6 +192,9 @@ void MX_FREERTOS_Init(void) {
   /* creation of CommunictaeTask */
   CommunictaeTaskHandle = osThreadNew(StartCommunictaeTask, NULL, &CommunictaeTask_attributes);
 
+  /* creation of KeyScanTask */
+  KeyScanTaskHandle = osThreadNew(StartKeyScanTask, NULL, &KeyScanTask_attributes);
+
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
@@ -226,6 +239,24 @@ __weak void StartCommunictaeTask(void *argument)
     osDelay(1);
   }
   /* USER CODE END StartCommunictaeTask */
+}
+
+/* USER CODE BEGIN Header_StartKeyScanTask */
+/**
+* @brief Function implementing the KeyScanTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartKeyScanTask */
+__weak void StartKeyScanTask(void *argument)
+{
+  /* USER CODE BEGIN StartKeyScanTask */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END StartKeyScanTask */
 }
 
 /* Private application code --------------------------------------------------*/

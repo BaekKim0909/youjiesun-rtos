@@ -75,8 +75,6 @@ void Error_Handler(void);
 #define KB_R3_GPIO_Port GPIOG
 #define KB_R4_Pin GPIO_PIN_13
 #define KB_R4_GPIO_Port GPIOG
-#define KB_R5_Pin GPIO_PIN_14
-#define KB_R5_GPIO_Port GPIOG
 #define KB_C5_Pin GPIO_PIN_3
 #define KB_C5_GPIO_Port GPIOB
 #define KB_C4_Pin GPIO_PIN_4

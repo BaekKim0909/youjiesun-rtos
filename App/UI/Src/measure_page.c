@@ -159,7 +159,7 @@ void load_start_test_page(void)
     lv_obj_set_style_radius(start_measure_btn, 20, LV_PART_MAIN);
     lv_obj_set_style_bg_color(start_measure_btn, lv_color_hex(0x123867), LV_PART_MAIN);
     lv_obj_set_style_outline_width(start_measure_btn, 0, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
-    lv_obj_add_style(start_measure_btn, &btn_focus_style_g, LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_add_style(start_measure_btn, &btn_focus_style_g, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
 
     lv_obj_t *label5 = lv_label_create(start_measure_btn);
     lv_obj_set_style_text_font(label5, &chinese_character_20, LV_STATE_DEFAULT);

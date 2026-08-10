@@ -13,7 +13,6 @@
 #define FPGA_RX_EVENT  (1UL << 9)
 
 
-
 typedef struct UART_Device UART_Device;
 
 /**
@@ -26,14 +25,19 @@ struct UART_Device
 {
     // 设备名称，主要用于调试和日志
     char *name;
+
     // 初始化发送同步对象，并启动DMA空闲接收
     int (*init)(UART_Device *uart_device_p);
+
     // 使用DMA发送数据，timeout单位为毫秒
     int (*send_data)(const UART_Device *uart_device_p, const uint8_t *datas, uint16_t length, uint32_t timeout);
+
     // 注册接收任务句柄，DMA中断收到数据后会通知这个任务
     void (*bind_rx_task)(UART_Device *uart_device_p, TaskHandle_t task_handle);
+
     // 从软件环形缓冲区中取出一包完整且CRC正确的数据
     uint16_t (*get_command)(const UART_Device *uart_device_p, uint8_t *command, uint16_t command_capacity);
+
     // 指向具体串口设备的私有数据，上层不应直接访问
     void *uart_data;
 };
@@ -52,9 +56,13 @@ struct Ring_Buffer
     volatile uint16_t read_index;
     // 缓冲区写索引，仅由中断更新
     volatile uint16_t write_index;
+
     // 缓冲区写入函数
     uint16_t (*buffer_write)(Ring_Buffer *ring_buffer, const uint8_t *data, uint16_t length);
+
     // 获取一包完整且CRC正确的指令
     uint16_t (*command_get)(Ring_Buffer *ring_buffer, uint8_t *command, uint16_t command_capacity);
 };
+
+uint16_t modbus_crc16(const uint8_t *data, uint16_t length);
 #endif //YOUJIESUN_UART_DEVICE_H

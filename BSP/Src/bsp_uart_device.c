@@ -54,19 +54,26 @@ typedef struct
 } UART_Data;
 
 
-
 static void ringBuffer_add_readIndex(Ring_Buffer *ring_buffer, uint16_t length);
+
 static uint8_t ringBuffer_read(const Ring_Buffer *ring_buffer, uint16_t index);
+
 static uint16_t ringBuffer_get_length(const Ring_Buffer *ring_buffer);
+
 static uint16_t ringBuffer_get_remainLength(const Ring_Buffer *ring_buffer);
+
 static uint16_t ringBuffer_write(Ring_Buffer *ring_buffer, const uint8_t *data, uint16_t length);
+
 static uint16_t ringBuffer_get_command(Ring_Buffer *ring_buffer, uint8_t *command, uint16_t command_capacity);
-static uint16_t modbus_crc16(const uint8_t *data, uint16_t length);
 
 static int stm32_dma_uart_init(UART_Device *uart_device_p);
+
 static int stm32_uart_send(const UART_Device *uart_device_p, const uint8_t *datas, uint16_t length, uint32_t timeout);
+
 static void stm32_uart_bind_rx_task(UART_Device *uart_device_p, TaskHandle_t task_handle);
+
 static uint16_t stm32_uart_get_command(const UART_Device *uart_device_p, uint8_t *command, uint16_t command_capacity);
+
 static HAL_StatusTypeDef stm32_uart_start_receive(UART_Data *uart_data);
 
 // FPGA串口通讯设备数据
@@ -192,7 +199,7 @@ static int stm32_uart_send(const UART_Device *uart_device_p, const uint8_t *data
     }
 
     // 清除上一次异常流程可能遗留的发送完成信号
-    (void)xSemaphoreTake(uart_data->tx_semaphore, 0U);
+    (void) xSemaphoreTake(uart_data->tx_semaphore, 0U);
 
     if (HAL_UART_Transmit_DMA(uart_data->uart_handle, datas, length) != HAL_OK)
     {
@@ -201,7 +208,7 @@ static int stm32_uart_send(const UART_Device *uart_device_p, const uint8_t *data
 
     if (xSemaphoreTake(uart_data->tx_semaphore, timeout) != pdTRUE)
     {
-        (void)HAL_UART_AbortTransmit(uart_data->uart_handle);
+        (void) HAL_UART_AbortTransmit(uart_data->uart_handle);
         return -1;
     }
 
@@ -257,9 +264,9 @@ static void ringBuffer_add_readIndex(Ring_Buffer *ring_buffer, uint16_t length)
         return;
     }
 
-    next_index = (uint32_t)ring_buffer->read_index + length;
+    next_index = (uint32_t) ring_buffer->read_index + length;
     __DMB();
-    ring_buffer->read_index = (uint16_t)(next_index % ring_buffer->buffer_size);
+    ring_buffer->read_index = (uint16_t) (next_index % ring_buffer->buffer_size);
 }
 
 /**
@@ -312,7 +319,7 @@ static uint16_t ringBuffer_get_remainLength(const Ring_Buffer *ring_buffer)
         return 0;
     }
 
-    return (uint16_t)(ring_buffer->buffer_size - 1U - ringBuffer_get_length(ring_buffer));
+    return (uint16_t) (ring_buffer->buffer_size - 1U - ringBuffer_get_length(ring_buffer));
 }
 
 /**
@@ -355,14 +362,14 @@ static uint16_t ringBuffer_write(Ring_Buffer *ring_buffer, const uint8_t *data, 
     write_index = ring_buffer->write_index;
 
     // 第一段最多写到物理数组末尾；如果本次数据没跨尾部，first_length就是length
-    first_length = (uint16_t)(ring_buffer->buffer_size - write_index);
+    first_length = (uint16_t) (ring_buffer->buffer_size - write_index);
     if (first_length > length)
     {
         first_length = length;
     }
 
     // 第二段表示跨过数组末尾后，需要从buffer[0]继续写入的字节数
-    second_length = (uint16_t)(length - first_length);
+    second_length = (uint16_t) (length - first_length);
 
     // 复制第一段：[write_index, write_index + first_length)
     memcpy(ring_buffer->buffer + write_index, data, first_length);
@@ -373,7 +380,7 @@ static uint16_t ringBuffer_write(Ring_Buffer *ring_buffer, const uint8_t *data, 
     }
 
     // 写指针前进length字节，超过数组末尾时通过取模回到数组头部
-    new_write_index = (uint16_t)(((uint32_t)write_index + length) % ring_buffer->buffer_size);
+    new_write_index = (uint16_t) (((uint32_t) write_index + length) % ring_buffer->buffer_size);
 
     // 保证数据内容先写入RAM，再让任务看到新的write_index
     __DMB();
@@ -426,7 +433,7 @@ static uint16_t ringBuffer_get_command(Ring_Buffer *ring_buffer, uint8_t *comman
         }
 
         // 当前只接受旧协议中的读功能码0x03和自定义写功能码0x06
-        function_code = ringBuffer_read(ring_buffer, (uint16_t)(read_index + 1U));
+        function_code = ringBuffer_read(ring_buffer, (uint16_t) (read_index + 1U));
         if (function_code != FPGA_FUNCTION_READ && function_code != FPGA_FUNCTION_WRITE)
         {
             ringBuffer_add_readIndex(ring_buffer, 1U);
@@ -434,20 +441,20 @@ static uint16_t ringBuffer_get_command(Ring_Buffer *ring_buffer, uint8_t *comman
         }
 
         // 寄存器数量采用大端顺序：高字节在前，低字节在后
-        register_count = (uint16_t)((uint16_t)ringBuffer_read(ring_buffer, (uint16_t)(read_index + 4U)) << 8U);
-        register_count |= ringBuffer_read(ring_buffer, (uint16_t)(read_index + 5U));
+        register_count = (uint16_t) ((uint16_t) ringBuffer_read(ring_buffer, (uint16_t) (read_index + 4U)) << 8U);
+        register_count |= ringBuffer_read(ring_buffer, (uint16_t) (read_index + 5U));
 
         // 固定字段和CRC共8字节，每个寄存器占2字节
-        frame_length_calculated = FPGA_FRAME_FIXED_SIZE + (uint32_t)register_count * 2U;
+        frame_length_calculated = FPGA_FRAME_FIXED_SIZE + (uint32_t) register_count * 2U;
         if (register_count == 0U
             || frame_length_calculated > command_capacity
-            || frame_length_calculated > (uint32_t)(ring_buffer->buffer_size - 1U))
+            || frame_length_calculated > (uint32_t) (ring_buffer->buffer_size - 1U))
         {
             ringBuffer_add_readIndex(ring_buffer, 1U);
             continue;
         }
 
-        frame_length = (uint16_t)frame_length_calculated;
+        frame_length = (uint16_t) frame_length_calculated;
         available_length = ringBuffer_get_length(ring_buffer);
         if (available_length < frame_length)
         {
@@ -458,13 +465,13 @@ static uint16_t ringBuffer_get_command(Ring_Buffer *ring_buffer, uint8_t *comman
         // 使用ringBuffer_read逐字节复制，可以自然处理帧跨越数组尾部的情况
         for (uint16_t i = 0; i < frame_length; i++)
         {
-            command[i] = ringBuffer_read(ring_buffer, (uint16_t)(read_index + i));
+            command[i] = ringBuffer_read(ring_buffer, (uint16_t) (read_index + i));
         }
 
         // 最后两个字节不参与CRC计算；线上顺序是CRC低字节在前、高字节在后
-        crc_calculated = modbus_crc16(command, (uint16_t)(frame_length - 2U));
-        crc_received = (uint16_t)command[frame_length - 2U]
-                     | ((uint16_t)command[frame_length - 1U] << 8U);
+        crc_calculated = modbus_crc16(command, (uint16_t) (frame_length - 2U));
+        crc_received = (uint16_t) command[frame_length - 2U]
+                       | ((uint16_t) command[frame_length - 1U] << 8U);
 
         if (crc_calculated != crc_received)
         {
@@ -486,7 +493,7 @@ static uint16_t ringBuffer_get_command(Ring_Buffer *ring_buffer, uint8_t *comman
  *
  * 初始值为0xFFFF，使用反射多项式0xA001。返回的16位数在线路上传输时低字节在前。
  */
-static uint16_t modbus_crc16(const uint8_t *data, uint16_t length)
+uint16_t modbus_crc16(const uint8_t *data, uint16_t length)
 {
     uint16_t crc = 0xFFFFU;
 
@@ -543,8 +550,9 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size)
     UART_Data *fpga_uart_data = fpga_device.uart_data;
     BaseType_t higher_priority_task_woken = pdFALSE;
     HAL_UART_RxEventTypeTypeDef event_type = HAL_UARTEx_GetRxEventType(huart);
-    if (huart == fpga_uart_data->uart_handle) {
-        if (event_type == HAL_UART_RXEVENT_IDLE ||  event_type == HAL_UART_RXEVENT_TC)
+    if (huart == fpga_uart_data->uart_handle)
+    {
+        if (event_type == HAL_UART_RXEVENT_IDLE || event_type == HAL_UART_RXEVENT_TC)
         {
             uint16_t written_length;
             // 环形缓冲区空间不足时整块拒绝，并通过计数器记录本次丢块
@@ -568,7 +576,8 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size)
             // 通知只表示“可能有新数据”，任务醒来后需要循环取出所有完整包
             if (fpga_uart_data->rx_task_handle != NULL)
             {
-                xTaskNotifyFromISR(fpga_uart_data->rx_task_handle,FPGA_RX_EVENT,eSetBits,&higher_priority_task_woken);
+                xTaskNotifyFromISR(fpga_uart_data->rx_task_handle, FPGA_RX_EVENT, eSetBits,
+                                   &higher_priority_task_woken);
                 portYIELD_FROM_ISR(higher_priority_task_woken);
             }
         }

@@ -15,7 +15,17 @@
 #define FPGA_COMM_REGISTER_DATA_END_INDEX(reg_num)\
     (FPGA_COMM_REGISTER_DATA_START_INDEX + (reg_num) * FPGA_COMM_REGISTER_SIZE)
 #include <stdint.h>
+#include "bsp_uart_device.h"
+
+typedef struct
+{
+    uint16_t start_address;
+    uint16_t reg_num;
+} read_instruction_t;
 
 // 解析指令
 void fpga_comm_parse_command(const uint8_t *command_buf, uint16_t length);
+
+// 读取寄存器指令
+void fpga_comm_send_read_command(uint16_t start_address, uint16_t reg_num);
 #endif //YOUJIESUN_FPGA_COMM_H

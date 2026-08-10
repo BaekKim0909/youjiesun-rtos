@@ -23,7 +23,11 @@
 #define __MAIN_H
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
+
+
+
 #endif
 
 /* Includes ------------------------------------------------------------------*/
@@ -33,15 +37,20 @@ extern "C" {
 /* USER CODE BEGIN Includes */
 #include "cmsis_os2.h"
 #include "FreeRTOS.h"
+#include "queue.h"
 #include "semphr.h"
+#include "timers.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
+extern TaskHandle_t communicate_taskHandle;
+extern QueueHandle_t fpga_tx_read_instruction_queue;
 extern osSemaphoreId_t ScreenFlushSemaphoreHandle;
 extern SemaphoreHandle_t spi5_tx_semaphore;
 extern SemaphoreHandle_t spi5_rx_semaphore;
 extern SemaphoreHandle_t spi5_tx_rx_semaphore;
+extern TimerHandle_t read_temperature_timer;
 extern TIM_HandleTypeDef htim2;
 extern UART_HandleTypeDef huart4;
 extern UART_HandleTypeDef huart2;

@@ -14,9 +14,9 @@ set(CMAKE_C_EXTENSIONS ON)
 
 
 # Define the build type
-if(NOT CMAKE_BUILD_TYPE)
+if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug")
-endif()
+endif ()
 
 # Set the project name
 set(CMAKE_PROJECT_NAME YouJieSun)
@@ -39,7 +39,7 @@ add_subdirectory(cmake/stm32cubemx)
 
 # Link directories setup
 target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
-    # Add user defined library search paths
+        # Add user defined library search paths
 )
 
 # Add sources to executable
@@ -48,7 +48,7 @@ file(GLOB_RECURSE FAL_SOURCE "Middlewares/fal/*.c")
 file(GLOB_RECURSE IMG_SOURCE "App/UI/Source/Img/*.c")
 file(GLOB_RECURSE FONT_SOURCE "App/UI/Source/Font/*.c")
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-    # Add user sources here
+        # Add user sources here
         ${LVGL_SOURCE}
         ${FAL_SOURCE}
         ${IMG_SOURCE}
@@ -59,7 +59,9 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
         App/UI/Src/mainUI.c
         App/UI/Src/header.c
         App/UI/Src/footer.c
+        App/UI/Src/measure_page.c
         App/UI/Style/Src/style_g.c
+        App/UI/Src/translations.c
         App/Task/Src/UITask.c
         App/Task/Src/CommunicateTask.c
         App/Task/Src/KeyScanTask.c
@@ -75,7 +77,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
 
 # Add include paths
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
-    # Add user defined include paths
+        # Add user defined include paths
         Middlewares/lvgl
         Middlewares/lvgl/src
         Middlewares/lvgl/porting
@@ -91,7 +93,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
 
 # Add project symbols (macros)
 target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
-    # Add user defined symbols
+        # Add user defined symbols
         LV_LVGL_H_INCLUDE_SIMPLE
 )
 
@@ -100,7 +102,7 @@ list(REMOVE_ITEM CMAKE_C_IMPLICIT_LINK_LIBRARIES ob)
 
 # Add linked libraries
 target_link_libraries(${CMAKE_PROJECT_NAME}
-    stm32cubemx
+        stm32cubemx
 
-    # Add user defined libraries
+        # Add user defined libraries
 )

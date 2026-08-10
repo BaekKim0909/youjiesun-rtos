@@ -35,7 +35,9 @@
 // static void mouse_get_xy(int32_t * x, int32_t * y);
 
 static void keypad_init(void);
-static void keypad_read(lv_indev_t * indev, lv_indev_data_t * data);
+
+static void keypad_read(lv_indev_t *indev, lv_indev_data_t *data);
+
 static uint32_t keypad_key_to_lvgl(KEY_CODE key);
 
 // static void encoder_init(void);
@@ -52,7 +54,7 @@ static uint32_t keypad_key_to_lvgl(KEY_CODE key);
  **********************/
 // lv_indev_t * indev_touchpad;
 // lv_indev_t * indev_mouse;
-lv_indev_t * indev_keypad;
+lv_indev_t *indev_keypad;
 // lv_indev_t * indev_encoder;
 // lv_indev_t * indev_button;
 
@@ -173,7 +175,6 @@ void lv_port_indev_init(void)
  * -----------------*/
 
 
-
 // /*Initialize your touchpad*/
 // static void touchpad_init(void)
 // {
@@ -276,12 +277,12 @@ static void keypad_init(void)
  * 由 LVGL 周期调用，只读取 BSP 已完成消抖的稳定快照，不直接扫描 GPIO。
  * 释放状态必须继续携带 last_key，LVGL 才能将释放事件与之前的按下事件配对。
  */
-static void keypad_read(lv_indev_t * indev_drv, lv_indev_data_t * data)
+static void keypad_read(lv_indev_t *indev_drv, lv_indev_data_t *data)
 {
     static uint32_t last_key = 0U;
     KEY_DATA key_data = bsp_matrix_key_get_state();
-
-    (void)indev_drv;
+    uint32_t current_key = keypad_key_to_lvgl(key_data.code);
+    (void) indev_drv;
 
     if (key_data.state == KEY_STATE_PRESSED)
     {

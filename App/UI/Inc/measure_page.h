@@ -5,4 +5,5 @@
 #ifndef YOUJIESUN_MEASURE_PAGE_H
 #define YOUJIESUN_MEASURE_PAGE_H
 
+void load_start_test_page(void);
 #endif //YOUJIESUN_MEASURE_PAGE_H

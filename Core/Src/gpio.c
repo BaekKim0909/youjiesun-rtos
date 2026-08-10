@@ -90,7 +90,7 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pin = KB_C5_Pin|KB_C4_Pin|KB_C3_Pin|KB_C2_Pin
                           |KB_C1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 }

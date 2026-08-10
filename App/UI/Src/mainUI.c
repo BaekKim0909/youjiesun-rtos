@@ -76,6 +76,9 @@ void container_init()
     lv_obj_set_style_border_width(Container, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_all(Container, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_remove_flag(Container, LV_OBJ_FLAG_SCROLLABLE);
+
+
+    printf("111111");
 }
 
 void group_init(void)

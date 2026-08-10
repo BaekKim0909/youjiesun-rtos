@@ -20,14 +20,13 @@
 /* Includes ------------------------------------------------------------------*/
 #include "FreeRTOS.h"
 #include "task.h"
-#include "timers.h"
 #include "main.h"
 #include "cmsis_os.h"
-#include "fpga_comm.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "timers.h"
+#include "fpga_comm.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -98,8 +97,6 @@ void start_communicate_task(void *argument);
 /* USER CODE END FunctionPrototypes */
 
 void StartUITask(void *argument);
-
-void StartCommunictaeTask(void *argument);
 
 void StartKeyScanTask(void *argument);
 
@@ -248,24 +245,6 @@ __weak void StartUITask(void *argument)
         osDelay(1);
     }
     /* USER CODE END StartUITask */
-}
-
-/* USER CODE BEGIN Header_StartCommunictaeTask */
-/**
-* @brief Function implementing the CommunictaeTask thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_StartCommunictaeTask */
-__weak void StartCommunictaeTask(void *argument)
-{
-    /* USER CODE BEGIN StartCommunictaeTask */
-    /* Infinite loop */
-    for (;;)
-    {
-        osDelay(1);
-    }
-    /* USER CODE END StartCommunictaeTask */
 }
 
 /* USER CODE BEGIN Header_StartKeyScanTask */

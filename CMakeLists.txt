@@ -60,6 +60,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
         App/UI/Src/header.c
         App/UI/Src/footer.c
         App/UI/Src/measure_page.c
+        App/UI/Src/page_switch.c
         App/UI/Style/Src/style_g.c
         App/UI/Src/translations.c
         App/Task/Src/UITask.c

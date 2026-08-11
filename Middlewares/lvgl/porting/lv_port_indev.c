@@ -11,6 +11,7 @@
  *********************/
 #include "lv_port_indev.h"
 #include "bsp_matrix_key.h"
+#include "page_switch.h"
 
 /*********************
  *      DEFINES
@@ -310,6 +311,10 @@ static uint32_t keypad_key_to_lvgl(KEY_CODE key)
         case KEY_RIGHT:
             return LV_KEY_NEXT;
         case KEY_RETURN:
+        {
+            handle_return_page();
+            return 0U;
+        }
             return LV_KEY_ESC;
         case KEY_ENTER:
             return LV_KEY_ENTER;

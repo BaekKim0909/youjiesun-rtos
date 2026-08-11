@@ -53,6 +53,7 @@ void ui_first_load()
 
     load_start_test_page();
     lv_indev_set_group(indev_keypad, measure_page_group);
+    lv_group_focus_obj(lv_group_get_obj_by_index(measure_page_group, 0));
 
     footer_init();
     footer_load();
@@ -76,6 +77,15 @@ void container_init()
     lv_obj_set_style_border_width(Container, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_all(Container, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_remove_flag(Container, LV_OBJ_FLAG_SCROLLABLE);
+}
+
+// Container 销毁
+void container_dispose(void)
+{
+    if (Container == NULL)
+        return;
+    lv_obj_delete(Container);
+    Container = NULL;
 }
 
 void group_init(void)

@@ -196,6 +196,8 @@ void load_start_test_page(void)
     lv_group_add_obj(measure_page_group, sample_id_textArea);
     lv_group_add_obj(measure_page_group, resistance_dd_list);
     lv_group_add_obj(measure_page_group, start_measure_btn);
+
+    lv_obj_send_event(measure_standard_dd_list, LV_EVENT_DEFOCUSED,NULL);
 }
 
 static void start_test_cb(lv_event_t *e)

@@ -17,6 +17,12 @@ LV_FONT_DECLARE(chinese_character_20);
 extern lv_indev_t *indev_keypad;
 extern lv_group_t *measure_page_group;
 
+static void widgets_focus_cb(lv_event_t *e);
+
+static void widgets_defocus_cb(lv_event_t *e);
+
+static void start_test_cb(lv_event_t *e);
+
 void load_start_test_page(void)
 {
     current_page_index_g = START_MEASURE_PAGE;
@@ -79,6 +85,7 @@ void load_start_test_page(void)
     lv_obj_set_style_text_font(measure_standard_dd_list, &chinese_character_20, LV_PART_MAIN);
     lv_obj_set_style_text_font(measure_standard_dd_list, &lv_font_montserrat_16, LV_PART_INDICATOR);
     lv_obj_set_style_radius(measure_standard_dd_list, 0, LV_PART_MAIN);
+    lv_obj_set_style_outline_width(measure_standard_dd_list, 0, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
 
     lv_obj_t *standardList = lv_dropdown_get_list(measure_standard_dd_list);
     lv_obj_set_style_radius(standardList, 0, LV_PART_MAIN);
@@ -92,6 +99,9 @@ void load_start_test_page(void)
     lv_obj_set_size(measure_standard_dd_list, 240, 40);
     lv_obj_align_to(measure_standard_dd_list, label1, LV_ALIGN_OUT_BOTTOM_MID, 0, 21);
 
+    lv_obj_add_event_cb(measure_standard_dd_list, widgets_focus_cb, LV_EVENT_FOCUSED, NULL);
+    lv_obj_add_event_cb(measure_standard_dd_list, widgets_defocus_cb, LV_EVENT_DEFOCUSED, NULL);
+
     /* 测试电极下拉框 */
     lv_obj_t *electrode_dd_list = lv_dropdown_create(container);
     lv_obj_set_size(electrode_dd_list, 140, 40);
@@ -101,6 +111,11 @@ void load_start_test_page(void)
     lv_obj_set_style_text_font(electrode_dd_list, &lv_font_montserrat_16, LV_PART_INDICATOR);
     lv_obj_set_style_outline_width(electrode_dd_list, 0, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
 
+    lv_dropdown_set_options(electrode_dd_list, "A\nB\nC\nD\nE\nF\nG\nH");
+
+    lv_obj_add_event_cb(electrode_dd_list, widgets_focus_cb, LV_EVENT_FOCUSED, NULL);
+    lv_obj_add_event_cb(electrode_dd_list, widgets_defocus_cb, LV_EVENT_DEFOCUSED, NULL);
+
     lv_obj_t *electrodeList = lv_dropdown_get_list(electrode_dd_list);
     lv_obj_set_style_radius(electrodeList, 0, LV_PART_MAIN);
     lv_obj_set_style_text_font(electrodeList, &chinese_character_20, LV_PART_MAIN);
@@ -109,7 +124,6 @@ void load_start_test_page(void)
     lv_obj_set_style_pad_top(electrodeList, 8, LV_PART_MAIN);
     lv_obj_set_style_pad_left(electrodeList, 5, LV_PART_MAIN);
 
-    lv_dropdown_set_options(electrode_dd_list, "A\nB\nC\nD\nE\nF\nG\nH");
 
     /* 样品ID输入框 相关控件 */
     lv_obj_t *sample_id_textArea = lv_textarea_create(container);
@@ -131,6 +145,8 @@ void load_start_test_page(void)
     lv_obj_set_style_outline_width(sample_id_textArea, 0, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
     lv_textarea_set_max_length(sample_id_textArea, 51);
 
+    lv_obj_add_event_cb(sample_id_textArea, widgets_focus_cb, LV_EVENT_FOCUSED, NULL);
+    lv_obj_add_event_cb(sample_id_textArea, widgets_defocus_cb, LV_EVENT_DEFOCUSED, NULL);
 
     /* 体积电阻率下拉框 */
     lv_obj_t *resistance_dd_list = lv_dropdown_create(container);
@@ -141,6 +157,10 @@ void load_start_test_page(void)
     lv_obj_set_style_text_font(resistance_dd_list, &lv_font_montserrat_16, LV_PART_INDICATOR);
     lv_obj_set_style_bg_color(resistance_dd_list, lv_color_hex(0x808080), LV_STATE_DISABLED | LV_PART_MAIN);
     lv_dropdown_set_options(resistance_dd_list, "NULL\nRho+\nRho+ & Rho-");
+    lv_obj_set_style_outline_width(resistance_dd_list, 0, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
+
+    lv_obj_add_event_cb(resistance_dd_list, widgets_focus_cb, LV_EVENT_FOCUSED, NULL);
+    lv_obj_add_event_cb(resistance_dd_list, widgets_defocus_cb, LV_EVENT_DEFOCUSED, NULL);
 
     lv_obj_t *resistance_list = lv_dropdown_get_list(resistance_dd_list);
     lv_obj_set_style_radius(resistance_list, 0, LV_PART_MAIN);
@@ -161,6 +181,8 @@ void load_start_test_page(void)
     lv_obj_set_style_outline_width(start_measure_btn, 0, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
     lv_obj_add_style(start_measure_btn, &btn_focus_style_g, LV_PART_MAIN | LV_STATE_FOCUS_KEY);
 
+    lv_obj_add_event_cb(start_measure_btn, start_test_cb, LV_EVENT_CLICKED,NULL);
+
     lv_obj_t *label5 = lv_label_create(start_measure_btn);
     lv_obj_set_style_text_font(label5, &chinese_character_20, LV_STATE_DEFAULT);
     lv_label_set_translation_tag(label5, "start_test");
@@ -174,4 +196,42 @@ void load_start_test_page(void)
     lv_group_add_obj(measure_page_group, sample_id_textArea);
     lv_group_add_obj(measure_page_group, resistance_dd_list);
     lv_group_add_obj(measure_page_group, start_measure_btn);
+}
+
+static void start_test_cb(lv_event_t *e)
+{
+}
+
+static void widgets_focus_cb(lv_event_t *e)
+{
+    lv_obj_t *obj = lv_event_get_target_obj(e);
+    if (lv_obj_check_type(obj, &lv_dropdown_class))
+    {
+        /* code */
+        lv_obj_set_style_bg_color(obj, lv_color_hex(0x2D96FF), LV_PART_MAIN | LV_STATE_FOCUS_KEY);
+        lv_obj_set_style_text_color(obj, lv_color_hex(0xF8F9FF), LV_PART_MAIN);
+    }
+    else if (lv_obj_check_type(obj, &lv_textarea_class))
+    {
+        /* code */
+        lv_obj_set_style_bg_color(obj, lv_color_hex(0x2D96FF), LV_PART_MAIN | LV_STATE_FOCUS_KEY);
+        lv_obj_set_style_text_color(obj, lv_color_hex(0xF8F9FF), LV_PART_MAIN);
+    }
+}
+
+static void widgets_defocus_cb(lv_event_t *e)
+{
+    lv_obj_t *obj = lv_event_get_target_obj(e);
+    if (lv_obj_check_type(obj, &lv_dropdown_class))
+    {
+        /* code */
+        lv_obj_set_style_bg_color(obj, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_FOCUS_KEY);
+        lv_obj_set_style_text_color(obj, lv_color_hex(0x000000), LV_PART_MAIN);
+    }
+    else if (lv_obj_check_type(obj, &lv_textarea_class))
+    {
+        /* code */
+        lv_obj_set_style_bg_color(obj, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_FOCUS_KEY);
+        lv_obj_set_style_text_color(obj, lv_color_hex(0x000000), LV_PART_MAIN);
+    }
 }

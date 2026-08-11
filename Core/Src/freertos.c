@@ -39,7 +39,7 @@
 #define TEST_TASK_STACK_SIZE (256)
 #define TEST_TASK_PRIORITY (osPriorityNormal4)
 
-#define COMMUNICATE_TASK_STACK_SIZE (128)
+#define COMMUNICATE_TASK_STACK_SIZE (256)
 #define COMMUNICATE_TASK_PRIORITY (osPriorityAboveNormal)
 /* USER CODE END PD */
 
@@ -50,11 +50,18 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
+/*
+ * 任务句柄
+ */
 TaskHandle_t communicate_taskHandle = NULL;
 TaskHandle_t test_taskHandle = NULL;
 
 TimerHandle_t read_temperature_timer = NULL;
 
+
+/*
+ * 信号量句柄句柄
+ */
 /* SPI5发送完成信号量 */
 SemaphoreHandle_t spi5_tx_semaphore = NULL;
 /* SPI5接收完成信号量 */

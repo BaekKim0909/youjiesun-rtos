@@ -6,11 +6,11 @@
 //
 void StartUITask(void *argument)
 {
-	lvgl_init();
-	ui_first_load();
-	for (;;)
-	{
-		lv_timer_handler();
-		osDelay(5);
-	}
+    lvgl_init();
+    ui_first_load();
+    for (;;)
+    {
+        lv_timer_handler();
+        osDelay(16);
+    }
 }

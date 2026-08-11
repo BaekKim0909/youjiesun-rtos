@@ -20,7 +20,11 @@ void start_test_task(void *argument)
 typedef enum
 {
     TEST_IDLE = 0,
-    TEST_HEAT
+    TEST_HEAT,
+    TEST_FIRST_AC,
+    TEST_FIRST_DC,
+    TEST_SECOND_AC,
+    TEST_SECOND_DC
 } System_Status;
 
 void read_fpga_temperature_timer_cb(TimerHandle_t xTimer)

@@ -70,7 +70,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
         App/Task/Src/test_task.c
         App/Communication/Src/fpga_comm.c
         App/System/Src/system_state.c
-        App/System/Src/measure_standard.c
+        App/System/Src/test_standard.c
         Drivers/Src/W25Q256.c
         BSP/Src/lcd_screen.c
         BSP/Src/sdram.c

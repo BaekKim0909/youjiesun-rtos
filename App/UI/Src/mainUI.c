@@ -5,14 +5,17 @@
 #include "lcd_screen.h"
 #include "../../System/Inc/system_structs.h"
 #include "header.h"
-#include "footer.h"
 #include "style_g.h"
 #include "translations.h"
 
 extern lv_indev_t *indev_keypad;
+extern lv_group_t *navigation_group;
 
 extern void load_start_test_page(void);
 
+extern void update_selected_measure_standard_list(void);
+
+LV_IMAGE_DECLARE(TestFocusIcon);
 
 static lv_obj_t *Container = NULL;
 Setting_t user_setting_g = {0};
@@ -20,8 +23,11 @@ Setting_t default_setting_g = {0, 0, 4};
 
 Page_Index current_page_index_g = START_MEASURE_PAGE;
 
-
+// 测试界面组
 lv_group_t *measure_page_group = NULL;
+// 测试标准界面组
+lv_group_t *test_standard_page_group = NULL;
+
 
 // 初始化组
 static void group_init(void);
@@ -49,14 +55,24 @@ void ui_first_load()
 
     header_init();
     header_load();
-    container_init();
 
+
+    update_selected_measure_standard_list();
+
+    container_init();
     load_start_test_page();
     lv_indev_set_group(indev_keypad, measure_page_group);
     lv_group_focus_obj(lv_group_get_obj_by_index(measure_page_group, 0));
 
     footer_init();
     footer_load();
+    lv_obj_t *home_nav_button = lv_group_get_obj_by_index(navigation_group, 0);
+    lv_obj_t *img = lv_obj_get_child_by_type(home_nav_button, 0, &lv_image_class);
+    lv_obj_set_style_border_color(home_nav_button, lv_color_hex(0xFFD83B), LV_PART_MAIN);
+    lv_obj_set_style_bg_color(home_nav_button, lv_color_hex(0x0E2A4D), LV_PART_MAIN);
+    lv_image_set_src(img, &TestFocusIcon);
+
+
     // 设置屏幕亮度
     lcd_screen_set_bg_brightness(4);
 }
@@ -91,4 +107,5 @@ void container_dispose(void)
 void group_init(void)
 {
     measure_page_group = lv_group_create();
+    test_standard_page_group = lv_group_create();
 }

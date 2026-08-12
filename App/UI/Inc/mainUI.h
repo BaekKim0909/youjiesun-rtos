@@ -1,6 +1,7 @@
 #ifndef MAINUI_H
 #define MAINUI_H
 #include "lvgl.h"
+#include "footer.h"
 
 typedef enum
 {
@@ -13,6 +14,9 @@ typedef enum
 } Page_Index;
 
 extern Page_Index current_page_index_g;
+
+extern lv_group_t *measure_page_group;
+extern lv_group_t *test_standard_page_group;
 
 // lvgl初始化
 void lvgl_init(void);

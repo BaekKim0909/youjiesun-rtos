@@ -23,5 +23,12 @@ void handle_return_page(void)
         {
             lv_group_focus_obj(lv_group_get_obj_by_index(navigation_group, 0));
         }
+        else if (current_page_index_g == DATA_HANDLE_PAGE)
+        {
+        }
+        else if (current_page_index_g == TEST_STANDARD_PAGE)
+        {
+            lv_group_focus_obj(lv_group_get_obj_by_index(navigation_group, 2));
+        }
     }
 }

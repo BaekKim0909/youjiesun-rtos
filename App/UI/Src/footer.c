@@ -25,9 +25,10 @@ lv_group_t *navigation_group = NULL;
 
 
 extern lv_indev_t *indev_keypad;
-extern lv_group_t *measure_page_group;
 
 extern void load_start_test_page(void);
+
+extern void load_test_standard_page(void);
 
 // 导航栏按钮聚焦事件
 static void navigation_bar_button_focus(lv_event_t *e);
@@ -196,6 +197,7 @@ static void navigation_bar_button_focus(lv_event_t *e)
     }
     else if (flag == TEST_STANDARD_PAGE)
     {
+        load_test_standard_page();
         lv_obj_set_style_bg_color(btn, lv_color_hex(0x2D96FF), LV_PART_MAIN);
     }
     else if (flag == ELECTRODE_PAGE)
@@ -308,6 +310,9 @@ static void navigation_bar_button_clicked(lv_event_t *e)
         lv_obj_set_style_border_color(btn, lv_color_hex(0xFFD83B), LV_PART_MAIN);
         lv_obj_set_style_bg_color(btn, lv_color_hex(0x0E2A4D), LV_PART_MAIN);
         lv_image_set_src(img, &TestStandardFocusIcon);
+
+        lv_indev_set_group(indev_keypad, test_standard_page_group);
+        lv_group_focus_obj(lv_group_get_obj_by_index(test_standard_page_group, 0));
     }
     else if (flag == ELECTRODE_PAGE)
     {

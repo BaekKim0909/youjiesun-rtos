@@ -3,6 +3,8 @@
 //
 
 #include "../Inc/measure_page.h"
+#include "test_standard.h"
+#include <string.h>
 #include "mainUI.h"
 #include "style_g.h"
 
@@ -101,6 +103,21 @@ void load_start_test_page(void)
 
     lv_obj_add_event_cb(measure_standard_dd_list, widgets_focus_cb, LV_EVENT_FOCUSED, NULL);
     lv_obj_add_event_cb(measure_standard_dd_list, widgets_defocus_cb, LV_EVENT_DEFOCUSED, NULL);
+
+    char dd_options[512]; // 存下拉框选项字符串
+    dd_options[0] = '\0'; // 清空初始内容
+
+    for (uint16_t i = 0; i < test_standard_select_count; i++)
+    {
+        // 如果不是第一个选中项，先加一个换行符
+        if (strlen(dd_options) > 0)
+        {
+            strcat(dd_options, "\n");
+        }
+        // 追加选项名称
+        strcat(dd_options, selected_test_standard_list[i].StandardName);
+    }
+    lv_dropdown_set_options(measure_standard_dd_list, dd_options);
 
     /* 测试电极下拉框 */
     lv_obj_t *electrode_dd_list = lv_dropdown_create(container);

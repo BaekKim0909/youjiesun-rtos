@@ -56,10 +56,8 @@ void start_communicate_task(void *argument)
                         sizeof(command_buffer)
                     )) > 0U)
             {
-                // 到达这里说明：包头、功能码、长度和CRC已经全部通过检查
-                // command_buffer[0 ... command_length-1]就是一包完整数据
-                // 后续可在这里根据command_buffer[1]功能码、[2..3]寄存器地址解析业务内容
-                (void) command_length;
+                // 解析命令
+                fpga_comm_parse_command(command_buffer, command_length);
             }
         }
         // 通知值中有FPGA串口发送事件标志位

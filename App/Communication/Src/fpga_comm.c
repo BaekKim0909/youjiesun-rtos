@@ -8,7 +8,6 @@
 
 #include "../../System/Inc/system_structs.h"
 extern volatile DeviceState_t device_state;
-extern float current_temperature_g;
 extern UART_Device fpga_device;
 
 void fpga_comm_parse_command(const uint8_t *command_buf, uint16_t length)
@@ -54,7 +53,7 @@ void fpga_comm_parse_command(const uint8_t *command_buf, uint16_t length)
                 temp_value |= (uint32_t) command_buf[i];
             }
             memcpy(&temp_temperature, &temp_value, sizeof(float));
-            current_temperature_g = temp_temperature;
+            device_state.oil_cup_temperature = temp_temperature;
         }
     }
 }

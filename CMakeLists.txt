@@ -64,6 +64,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
         App/UI/Style/Src/style_g.c
         App/UI/Src/translations.c
         App/UI/Src/test_standard_page.c
+        App/UI/Src/notice_message.c
         App/Task/Src/UITask.c
         App/Task/Src/CommunicateTask.c
         App/Task/Src/KeyScanTask.c

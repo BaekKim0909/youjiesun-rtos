@@ -5,9 +5,8 @@
 #include "../Inc/fpga_comm.h"
 
 #include <string.h>
+#include "system_state.h"
 
-#include "../../System/Inc/system_structs.h"
-extern volatile DeviceState_t device_state;
 extern UART_Device fpga_device;
 
 void fpga_comm_parse_command(const uint8_t *command_buf, uint16_t length)

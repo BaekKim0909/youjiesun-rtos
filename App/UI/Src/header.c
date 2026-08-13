@@ -3,9 +3,9 @@
 //
 
 #include "header.h"
-#include "../../System/Inc/system_structs.h"
 #include "main.h"
-
+#include "system_state.h"
+#include "system_structs.h"
 LV_IMAGE_DECLARE(LidOpen);
 LV_IMAGE_DECLARE(LidClose);
 LV_IMAGE_DECLARE(PourOilClose);
@@ -20,7 +20,6 @@ LV_FONT_DECLARE(chinese_character_20);
 extern RTC_HandleTypeDef hrtc;
 extern Setting_t user_setting_g;
 extern Setting_t default_setting_g;
-extern DeviceState_t device_state;
 RTC_DateTypeDef CurrentDate; // 当前日期
 RTC_TimeTypeDef CurrentTime; // 当前时间
 

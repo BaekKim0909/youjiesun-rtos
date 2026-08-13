@@ -6,13 +6,6 @@
 #define YOUJIESUN_SYSTEM_STRUCTS_H
 #include <stdint.h>
 
-typedef struct
-{
-    uint16_t lid_state; // 0: 闭合  1: 打开
-    uint16_t pour_state; // 0: 默认  1: 排油中
-    uint16_t oil_cup_state; // 0: 正常  1: 异常
-    float oil_cup_temperature; // 油杯温度
-} DeviceState_t;
 
 typedef struct
 {

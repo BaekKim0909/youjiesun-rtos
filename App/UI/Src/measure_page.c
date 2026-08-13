@@ -7,6 +7,8 @@
 #include <string.h>
 #include "mainUI.h"
 #include "style_g.h"
+#include "notice_message.h"
+#include "system_state.h"
 
 LV_IMAGE_DECLARE(MeasureStandardIcon);
 LV_IMAGE_DECLARE(ElectrodeIcon);
@@ -17,7 +19,6 @@ LV_FONT_DECLARE(lv_font_montserrat_16);
 LV_FONT_DECLARE(chinese_character_20);
 
 extern lv_indev_t *indev_keypad;
-extern lv_group_t *measure_page_group;
 
 static void widgets_focus_cb(lv_event_t *e);
 
@@ -219,6 +220,17 @@ void load_start_test_page(void)
 
 static void start_test_cb(lv_event_t *e)
 {
+    if (test_standard_select_count <= 0)
+    {
+        notice_message_t notice_message =
+        {
+            .message = lv_translation_get("select_standard_tip"),
+            .result_type = NOTICE_ERROR
+        };
+        show_notice_message_box(notice_message);
+    }
+    if (!check_device_state())
+        return;
 }
 
 static void widgets_focus_cb(lv_event_t *e)
@@ -253,4 +265,36 @@ static void widgets_defocus_cb(lv_event_t *e)
         lv_obj_set_style_bg_color(obj, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_FOCUS_KEY);
         lv_obj_set_style_text_color(obj, lv_color_hex(0x000000), LV_PART_MAIN);
     }
+}
+
+bool check_device_state(void)
+{
+    if (device_state.lid_state == 1)
+    {
+        const notice_message_t notice_message = {
+            .message = lv_translation_get("close_lid_tip"),
+            .result_type = NOTICE_ERROR
+        };
+        show_notice_message_box(notice_message);
+        return false;
+    }
+    if (device_state.pour_state == 1)
+    {
+        const notice_message_t notice_message = {
+            .message = lv_translation_get("check_oil_cup_tip"),
+            .result_type = NOTICE_ERROR
+        };
+        show_notice_message_box(notice_message);
+        return false;
+    }
+    if (device_state.oil_cup_state == 1)
+    {
+        const notice_message_t notice_message = {
+            .message = lv_translation_get("pouring_tip"),
+            .result_type = NOTICE_ERROR
+        };
+        show_notice_message_box(notice_message);
+        return false;
+    }
+    return true;
 }

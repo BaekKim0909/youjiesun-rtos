@@ -1,6 +1,7 @@
 #ifndef MAINUI_H
 #define MAINUI_H
 #include "lvgl.h"
+#include "notice_message.h"
 #include "footer.h"
 
 typedef enum

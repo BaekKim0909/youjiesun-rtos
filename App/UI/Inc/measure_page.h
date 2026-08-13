@@ -4,6 +4,9 @@
 
 #ifndef YOUJIESUN_MEASURE_PAGE_H
 #define YOUJIESUN_MEASURE_PAGE_H
+#include <stdbool.h>
 
 void load_start_test_page(void);
+
+bool check_device_state(void);
 #endif //YOUJIESUN_MEASURE_PAGE_H

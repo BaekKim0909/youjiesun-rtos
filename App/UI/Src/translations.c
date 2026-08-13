@@ -14,6 +14,10 @@ const char *const tags[] =
     "rho",
     "please_enter_id",
     "start_test",
+    "select_standard_tip",
+    "close_lid_tip",
+    "check_oil_cup_tip",
+    "pouring_tip",
     NULL
 };
 const char *const translations[] = {
@@ -22,5 +26,9 @@ const char *const translations[] = {
     "样品ID", "Sample ID",
     "体积电阻率", "Rho",
     "请输入样品ID", "Enter Sample ID",
-    "开始测试","Start Test"
+    "开始测试", "Start Test",
+    "请选择测试标准!", "Please select the test standard!",
+    "请关闭盖子后重试", "Please close the lid and try again.",
+    "请检查油杯后重试", "Please check the oil cup and try again later",
+    "排油中......", "draining oil......"
 };

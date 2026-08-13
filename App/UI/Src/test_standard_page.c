@@ -59,7 +59,7 @@ void load_test_standard_page(void)
     {
         /* code */
         lv_table_set_cell_value(international_measure_standard_table, i, 0,
-                                international_test_standard_list[i].StandardName);
+                                international_test_standard_list[i].standard_name);
     }
 
     lv_obj_set_scrollbar_mode(international_measure_standard_table, LV_SCROLLBAR_MODE_AUTO);

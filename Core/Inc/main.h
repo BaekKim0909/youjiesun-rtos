@@ -23,7 +23,11 @@
 #define __MAIN_H
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
+
+
+
 #endif
 
 /* Includes ------------------------------------------------------------------*/
@@ -42,6 +46,7 @@ extern "C" {
 /* USER CODE BEGIN ET */
 extern TaskHandle_t communicate_taskHandle;
 extern QueueHandle_t fpga_tx_read_instruction_queue;
+extern QueueHandle_t test_event_queue;
 extern osSemaphoreId_t ScreenFlushSemaphoreHandle;
 extern SemaphoreHandle_t spi5_tx_semaphore;
 extern SemaphoreHandle_t spi5_rx_semaphore;

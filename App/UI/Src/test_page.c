@@ -2,14 +2,15 @@
 // Created by 74222 on 2026/7/15.
 //
 
-#include "../Inc/measure_page.h"
+#include "../Inc/test_page.h"
 #include "test_standard.h"
 #include <string.h>
 #include "mainUI.h"
 #include "style_g.h"
 #include "notice_message.h"
 #include "system_state.h"
-
+#include "test_data.h"
+#include "test_task.h"
 LV_IMAGE_DECLARE(MeasureStandardIcon);
 LV_IMAGE_DECLARE(ElectrodeIcon);
 LV_IMAGE_DECLARE(SampleIcon);
@@ -85,6 +86,7 @@ void load_start_test_page(void)
 
     /* 测试标准下拉框 */
     lv_obj_t *measure_standard_dd_list = lv_dropdown_create(container);
+    lv_obj_set_name(measure_standard_dd_list, "test_standard_dd");
     lv_obj_set_style_text_font(measure_standard_dd_list, &chinese_character_20, LV_PART_MAIN);
     lv_obj_set_style_text_font(measure_standard_dd_list, &lv_font_montserrat_16, LV_PART_INDICATOR);
     lv_obj_set_style_radius(measure_standard_dd_list, 0, LV_PART_MAIN);
@@ -116,12 +118,13 @@ void load_start_test_page(void)
             strcat(dd_options, "\n");
         }
         // 追加选项名称
-        strcat(dd_options, selected_test_standard_list[i].StandardName);
+        strcat(dd_options, selected_test_standard_list[i].standard_name);
     }
     lv_dropdown_set_options(measure_standard_dd_list, dd_options);
 
     /* 测试电极下拉框 */
     lv_obj_t *electrode_dd_list = lv_dropdown_create(container);
+    lv_obj_set_name(electrode_dd_list, "electrode_dd");
     lv_obj_set_size(electrode_dd_list, 140, 40);
     lv_obj_align_to(electrode_dd_list, label2, LV_ALIGN_OUT_BOTTOM_MID, 0, 21);
     lv_obj_set_style_radius(electrode_dd_list, 0, LV_PART_MAIN);
@@ -145,6 +148,7 @@ void load_start_test_page(void)
 
     /* 样品ID输入框 相关控件 */
     lv_obj_t *sample_id_textArea = lv_textarea_create(container);
+    lv_obj_set_name(sample_id_textArea, "id_textArea");
     lv_textarea_set_one_line(sample_id_textArea, true);
     lv_obj_set_style_radius(sample_id_textArea, 0, LV_PART_MAIN);
     lv_obj_set_style_text_font(sample_id_textArea, &chinese_character_20, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -168,6 +172,7 @@ void load_start_test_page(void)
 
     /* 体积电阻率下拉框 */
     lv_obj_t *resistance_dd_list = lv_dropdown_create(container);
+    lv_obj_set_name(resistance_dd_list, "rho_dd");
     lv_obj_set_size(resistance_dd_list, 170, 40);
     lv_obj_align_to(resistance_dd_list, label4, LV_ALIGN_OUT_BOTTOM_MID, 0, 21);
     lv_obj_set_style_radius(resistance_dd_list, 0, LV_PART_MAIN);
@@ -228,9 +233,47 @@ static void start_test_cb(lv_event_t *e)
             .result_type = NOTICE_ERROR
         };
         show_notice_message_box(notice_message);
+        return;
     }
     if (!check_device_state())
         return;
+    if (device_state.oil_cup_temperature > 300.0f)
+    {
+        notice_message_t notice_message =
+        {
+            .message = lv_translation_get("check_temperature_prob"),
+            .result_type = NOTICE_ERROR
+        };
+        show_notice_message_box(notice_message);
+        return;
+    }
+    lv_obj_t *container = container_get();
+    lv_obj_t *test_standard_dd = lv_obj_get_child_by_name(container, "test_standard_dd");
+    lv_obj_t *electrode_dd = lv_obj_get_child_by_name(container, "electrode_dd");
+    lv_obj_t *rho_dd = lv_obj_get_child_by_name(container, "rho_dd");
+
+    uint32_t selected_standard_id = lv_dropdown_get_selected(test_standard_dd);
+    uint32_t selected_electrode_id = lv_dropdown_get_selected(electrode_dd);
+    uint16_t rho_param = lv_dropdown_get_selected(rho_dd);
+
+    const test_request_t test_request = {
+        .params =
+        {
+            .empty_cell_capacitance = electrode_list[selected_electrode_id].capacitance,
+            .fill_num = selected_test_standard_list[selected_standard_id].fill_num,
+            .temperature = selected_test_standard_list[selected_standard_id].temperature,
+            .ac_voltage = selected_test_standard_list[selected_standard_id].ac_voltage,
+            .frequency = selected_test_standard_list[selected_standard_id].frequency,
+            .dc_voltage = selected_test_standard_list[selected_standard_id].dc_voltage,
+            .rho_param = rho_param
+        },
+        .standard_type = selected_test_standard_list[selected_standard_id].template
+    };
+    if (!test_request_start(&test_request))
+    {
+        // 开始测试失败
+        return;
+    }
 }
 
 static void widgets_focus_cb(lv_event_t *e)

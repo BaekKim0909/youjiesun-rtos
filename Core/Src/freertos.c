@@ -27,6 +27,7 @@
 /* USER CODE BEGIN Includes */
 #include "timers.h"
 #include "fpga_comm.h"
+#include "test_task.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -41,6 +42,9 @@
 
 #define COMMUNICATE_TASK_STACK_SIZE (256)
 #define COMMUNICATE_TASK_PRIORITY (osPriorityAboveNormal)
+
+#define TEST_EVENT_QUEUE_LENGTH     (10)
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -71,7 +75,7 @@ SemaphoreHandle_t spi5_tx_rx_semaphore = NULL;
 
 /* FPGA 串口读取指令 发送队列 */
 QueueHandle_t fpga_tx_read_instruction_queue = NULL;
-
+QueueHandle_t test_event_queue = NULL;
 /* USER CODE END Variables */
 /* Definitions for UITask */
 osThreadId_t UITaskHandle;
@@ -214,6 +218,11 @@ void MX_FREERTOS_Init(void)
     if (fpga_tx_read_instruction_queue != NULL)
     {
         vQueueAddToRegistry(fpga_tx_read_instruction_queue, "TX_INSTRUCTION_QUEUE");
+    }
+    test_event_queue = xQueueCreate(TEST_EVENT_QUEUE_LENGTH, sizeof(test_event_t));
+    if (test_event_queue != NULL)
+    {
+        vQueueAddToRegistry(test_event_queue, "TEST_EVENT_QUEUE");
     }
     /* USER CODE END RTOS_QUEUES */
 

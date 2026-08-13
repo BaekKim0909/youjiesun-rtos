@@ -18,6 +18,7 @@ const char *const tags[] =
     "close_lid_tip",
     "check_oil_cup_tip",
     "pouring_tip",
+    "check_temperature_prob",
     NULL
 };
 const char *const translations[] = {
@@ -30,5 +31,6 @@ const char *const translations[] = {
     "请选择测试标准!", "Please select the test standard!",
     "请关闭盖子后重试", "Please close the lid and try again.",
     "请检查油杯后重试", "Please check the oil cup and try again later",
-    "排油中......", "draining oil......"
+    "排油中......", "draining oil......",
+    "请检查温度探针", "Please check the temperature probe."
 };

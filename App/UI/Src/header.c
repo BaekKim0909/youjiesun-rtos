@@ -119,7 +119,7 @@ void header_load(void)
     lv_obj_set_name(temperatureLabel, "TemperatureLabel");
     lv_obj_set_style_text_font(temperatureLabel, &chinese_character_20, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_color(temperatureLabel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_label_set_text_fmt(temperatureLabel, "%.1f\xE2\x84\x83", device_state.oil_cup_temperature);
+    lv_label_set_text_fmt(temperatureLabel, "%.1f℃", device_state.oil_cup_temperature);
     lv_obj_align_to(temperatureLabel, temperatureImg, LV_ALIGN_OUT_RIGHT_MID, 10, 0);
 
     lv_obj_t *headerTimLabel = lv_label_create(header);
@@ -197,7 +197,7 @@ static void update_device_state_cb(lv_timer_t *timer)
         }
         else
         {
-            lv_label_set_text_fmt(temperature_label, "%.1f", device_state.oil_cup_temperature);
+            lv_label_set_text_fmt(temperature_label, "%.1f℃", device_state.oil_cup_temperature);
         }
     }
     if (temperature_img != NULL)

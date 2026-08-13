@@ -59,7 +59,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
         App/UI/Src/mainUI.c
         App/UI/Src/header.c
         App/UI/Src/footer.c
-        App/UI/Src/measure_page.c
+        App/UI/Src/test_page.c
         App/UI/Src/page_switch.c
         App/UI/Style/Src/style_g.c
         App/UI/Src/translations.c
@@ -72,6 +72,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
         App/Communication/Src/fpga_comm.c
         App/System/Src/system_state.c
         App/System/Src/test_standard.c
+        App/System/Src/test_data.c
         Drivers/Src/W25Q256.c
         BSP/Src/lcd_screen.c
         BSP/Src/sdram.c
@@ -90,8 +91,9 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
         Middlewares/fal/porting
         App/UI/Inc
         App/UI/Style/Inc
-        App/Communication/Inc
         App/System/Inc
+        App/Task/Inc
+        App/Communication/Inc
         Drivers/Inc
         BSP/Inc
 )

@@ -45,8 +45,8 @@ extern "C"
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
 extern TaskHandle_t communicate_taskHandle;
-extern QueueHandle_t fpga_tx_read_instruction_queue;
 extern QueueHandle_t test_event_queue;
+extern QueueHandle_t fpga_request_queue;
 extern osSemaphoreId_t ScreenFlushSemaphoreHandle;
 extern SemaphoreHandle_t spi5_tx_semaphore;
 extern SemaphoreHandle_t spi5_rx_semaphore;

@@ -4,8 +4,8 @@
 
 #ifndef YOUJIESUN_FPGA_COMM_H
 #define YOUJIESUN_FPGA_COMM_H
-
-
+#include "bsp_uart_device.h"
+#include "test_data.h"
 #define EMPTY_ELECTRODE_CAPACITANCE_REG         (0x0000U) /* 空杯电容值 参数寄存器 */
 
 #define WRITE_RESULT_REG                        (0x000CU)   /* 写入状态判断寄存器 */
@@ -19,14 +19,6 @@
 #define FPGA_COMM_REGISTER_DATA_END_INDEX(reg_num)\
     (FPGA_COMM_REGISTER_DATA_START_INDEX + (reg_num) * FPGA_COMM_REGISTER_SIZE)
 #include <stdint.h>
-#include "bsp_uart_device.h"
-#include "test_data.h"
-
-typedef struct
-{
-    uint16_t start_address;
-    uint16_t reg_num;
-} read_instruction_t;
 
 typedef enum
 {
@@ -34,13 +26,17 @@ typedef enum
     FPGA_OPERATION_WRITE_TEST_PARAMS /* 写入测试参数 */
 } fpga_operation_enum;
 
+
+#define FPGA_REQUEST_ID_NONE 0U
 /**
  * @brief 提交给CommunicateTask的FPGA通讯请求
  */
 typedef struct
 {
-    uint32_t request_id; /* 上位机内部请求编号，不发送给FPGA */
-
+    /* MCU内部请求编号，不发送给FPGA
+     * request_id == 0：不需要业务响应的请求;
+     * request_id != 0：需要响应关联的请求*/
+    uint32_t request_id;
     fpga_operation_enum operation; /* 本次通讯要执行的操作 */
 
     union
@@ -56,7 +52,7 @@ typedef struct
 typedef enum
 {
     FPGA_RESPONSE_SUCCESS = 0, /* FPGA确认请求执行成功 */
-    FPGA_RESPONSE_REJECTED, /* FPGA返回写入失败 */
+    FPGA_RESPONSE_FAIL, /* FPGA返回写入失败 */
     FPGA_RESPONSE_SEND_FAILED, /* UART发送失败 */
     FPGA_RESPONSE_TIMEOUT, /* 等待应答超时 */
     FPGA_RESPONSE_FORMAT_ERROR /* 应答格式错误 */
@@ -77,6 +73,20 @@ typedef struct
 // 解析指令
 void fpga_comm_parse_command(const uint8_t *command_buf, uint16_t length);
 
+/**
+ * @brief 判断接收帧是否为写入应答
+ *
+ * @param command_buffer 已通过底层CRC校验的完整帧
+ * @param command_length 完整帧长度
+ * @param write_accepted 输出FPGA是否接受本次写入
+ * @return true 该帧是写操作结果应答
+ * @return false 该帧不是写操作结果应答
+ */
+bool fpga_comm_parse_write_response(const uint8_t *command_buffer, uint16_t command_length,bool *write_accepted);
+
 // 读取寄存器指令
-void fpga_comm_send_read_command(uint16_t start_address, uint16_t reg_num);
+bool fpga_comm_send_read_command(const read_instruction_t *read_instruction);
+
+// 发送测试参数
+bool fpga_comm_send_test_params(const test_params_t *test_params);
 #endif //YOUJIESUN_FPGA_COMM_H

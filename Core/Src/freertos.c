@@ -43,8 +43,8 @@
 #define COMMUNICATE_TASK_STACK_SIZE (256)
 #define COMMUNICATE_TASK_PRIORITY (osPriorityAboveNormal)
 
-#define TEST_EVENT_QUEUE_LENGTH     (10)
-
+#define TEST_EVENT_QUEUE_LENGTH     (10U)
+#define FPGA_REQUEST_QUEUE_LENGTH   (16U)
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -74,8 +74,8 @@ SemaphoreHandle_t spi5_rx_semaphore = NULL;
 SemaphoreHandle_t spi5_tx_rx_semaphore = NULL;
 
 /* FPGA 串口读取指令 发送队列 */
-QueueHandle_t fpga_tx_read_instruction_queue = NULL;
 QueueHandle_t test_event_queue = NULL;
+QueueHandle_t fpga_request_queue = NULL;
 /* USER CODE END Variables */
 /* Definitions for UITask */
 osThreadId_t UITaskHandle;
@@ -214,15 +214,15 @@ void MX_FREERTOS_Init(void)
 
     /* USER CODE BEGIN RTOS_QUEUES */
     /* add queues, ... */
-    fpga_tx_read_instruction_queue = xQueueCreate(16, sizeof(read_instruction_t));
-    if (fpga_tx_read_instruction_queue != NULL)
-    {
-        vQueueAddToRegistry(fpga_tx_read_instruction_queue, "TX_INSTRUCTION_QUEUE");
-    }
     test_event_queue = xQueueCreate(TEST_EVENT_QUEUE_LENGTH, sizeof(test_event_t));
     if (test_event_queue != NULL)
     {
         vQueueAddToRegistry(test_event_queue, "TEST_EVENT_QUEUE");
+    }
+    fpga_request_queue = xQueueCreate(FPGA_REQUEST_QUEUE_LENGTH, sizeof(fpga_request_t));
+    if (fpga_request_queue != NULL)
+    {
+        vQueueAddToRegistry(fpga_request_queue, "FPGA_REQUEST_QUEUE");
     }
     /* USER CODE END RTOS_QUEUES */
 

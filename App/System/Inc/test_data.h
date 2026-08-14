@@ -9,6 +9,12 @@
 
 typedef struct
 {
+    uint16_t start_address;
+    uint16_t reg_num;
+} read_instruction_t;
+
+typedef struct
+{
     float empty_cell_capacitance; // 空杯电容值
     uint16_t fill_num; // 填充次数
     int32_t temperature; // 目标温度

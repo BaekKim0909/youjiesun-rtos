@@ -5,6 +5,8 @@
 #include "../Inc/fpga_comm.h"
 
 #include <string.h>
+#include <sys/types.h>
+
 #include "system_state.h"
 
 extern UART_Device fpga_device;
@@ -57,17 +59,78 @@ void fpga_comm_parse_command(const uint8_t *command_buf, uint16_t length)
     }
 }
 
-// 读取寄存器指令
-void fpga_comm_send_read_command(uint16_t start_address, uint16_t reg_num)
+bool fpga_comm_parse_write_response(const uint8_t *command_buffer, uint16_t command_length,bool *write_accepted)
 {
-    uint8_t reg_high_addr = (start_address >> 8) & 0xFF;
-    uint8_t reg_low_addr = start_address & 0xFF;
-    uint8_t reg_num_high = (reg_num >> 8) & 0xFF;
-    uint8_t reg_num_low = reg_num & 0xFF;
+    if (command_buffer == NULL || write_accepted == NULL || command_length != 10U)
+    {
+        return false;
+    }
+    const uint16_t start_address =
+            ((uint16_t) command_buffer[2] << 8) |
+            command_buffer[3];
+
+    const uint16_t register_count =
+            ((uint16_t) command_buffer[4] << 8) |
+            command_buffer[5];
+
+    const uint16_t write_result =
+            ((uint16_t) command_buffer[6] << 8) |
+            command_buffer[7];
+    if (command_buffer[0] != 0x01 ||
+        command_buffer[1] != 0x06 ||
+        start_address != WRITE_RESULT_REG ||
+        register_count != 1)
+    {
+        return false;
+    }
+    *write_accepted = write_result == 1U;
+    return true;
+}
+
+// 读取寄存器指令
+bool fpga_comm_send_read_command(const read_instruction_t *read_instruction)
+{
+    uint8_t reg_high_addr = (read_instruction->start_address >> 8) & 0xFF;
+    uint8_t reg_low_addr = read_instruction->start_address & 0xFF;
+    uint8_t reg_num_high = (read_instruction->reg_num >> 8) & 0xFF;
+    uint8_t reg_num_low = read_instruction->reg_num & 0xFF;
 
     uint8_t commandBuffer[8] = {0x01, 0x03, reg_high_addr, reg_low_addr, reg_num_high, reg_num_low};
     uint16_t crc = modbus_crc16(commandBuffer, 6);
     commandBuffer[6] = crc & 0xFF;
     commandBuffer[7] = (crc >> 8) & 0xFF;
-    fpga_device.send_data(&fpga_device, commandBuffer, 8, 1000);
+    return fpga_device.send_data(&fpga_device, commandBuffer, 8, 1000) == 0;
+}
+
+// 发送测试参数
+bool fpga_comm_send_test_params(const test_params_t *test_params)
+{
+    uint32_t capacitance_temp = 0;
+    memcpy(&capacitance_temp, &test_params->empty_cell_capacitance, sizeof(float));
+    uint8_t command_buffer[26] = {
+        0x01, 0x06,
+        0x00, 0x00, 0x00, 0x09,
+        (capacitance_temp >> 24) & 0xFF,
+        (capacitance_temp >> 16) & 0xFF,
+        (capacitance_temp >> 8) & 0xFF,
+        capacitance_temp & 0xFF,
+        (test_params->fill_num >> 8) & 0xFF,
+        test_params->fill_num & 0xFF,
+        (test_params->temperature >> 24) & 0xFF,
+        (test_params->temperature >> 16) & 0xFF,
+        (test_params->temperature >> 8) & 0xFF,
+        test_params->temperature & 0xFF,
+        (test_params->ac_voltage >> 8) & 0xFF,
+        test_params->ac_voltage & 0xFF,
+        (test_params->frequency >> 8) & 0xFF,
+        (test_params->frequency) & 0xFF,
+        (test_params->dc_voltage >> 8) & 0xFF,
+        test_params->dc_voltage & 0xFF,
+        (test_params->rho_param >> 8) & 0xFF,
+        test_params->rho_param & 0xFF
+    };
+    const uint16_t crc = modbus_crc16(command_buffer, 24);
+    command_buffer[24] = crc & 0xFF; // CRC低字节
+    command_buffer[25] = (crc >> 8) & 0xFF; // CRC高字节
+    return fpga_device.send_data(&fpga_device, command_buffer, 26, 1000U) == 0;
 }

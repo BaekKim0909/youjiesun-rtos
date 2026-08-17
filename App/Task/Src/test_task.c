@@ -18,8 +18,12 @@ typedef enum
     TEST_STATE_START_REQUEST_RECEIVED, // 收到测试请求
     TEST_STATE_WAIT_PARAM_RESPONSE, // 等待FPGA确认收到请求参数
     TEST_STATE_PARAM_CONFIRM, // FPGA确认收到参数
+    TEST_STATE_WAIT_HEATING_RESPONSE, // 等待FPGA确认升温指令
+    TEST_STATE_HEATING, // 加热阶段
+    TEST_STATE_WAIT_STOP_RESPONSE, // 等待FPGA确认停止指令
+    TEST_STATE_COMM_FAULT, // 通信故障，无法确认设备已停止
     TEST_STATE_START_FAIL, // 测试启动失败
-    TEST_STATE_HEATING,
+
     TEST_STATE_FIRST_AC,
     TEST_STATE_FIRST_DC,
     TEST_STATE_SECOND_AC,
@@ -45,8 +49,17 @@ static test_context_t test_context = {
 
 static uint32_t next_fpga_request_id = 1U;
 
-// 将最终通讯失败状态转换为UI可识别的通知原因
-static ui_notice_reason_enum test_get_ui_notice_reason(fpga_response_status_enum response_status);
+// 分配一个非零的MCU内部请求编号
+static uint32_t test_allocate_fpga_request_id(void);
+
+// 提交升温请求
+static bool test_submit_heating_request(void);
+
+// 提交停止请求并进入相应等待或故障状态
+static void test_submit_stop_request(void);
+
+// 判断响应是否属于当前等待的写事务
+static bool test_is_expected_fpga_response(const fpga_response_t *response);
 
 bool test_request_start(const test_request_t *request)
 {
@@ -95,7 +108,7 @@ void start_test_task(void *argument)
                 test_context.test_request = event.event_data.test_request;
                 test_context.test_state = TEST_STATE_START_REQUEST_RECEIVED;
                 fpga_request_t fpga_request = {
-                    .request_id = next_fpga_request_id++,
+                    .request_id = test_allocate_fpga_request_id(),
                     .operation = FPGA_OPERATION_WRITE_TEST_PARAMS,
                     .request_data.test_params = event.event_data.test_request.params
                 };
@@ -112,35 +125,72 @@ void start_test_task(void *argument)
             case TEST_EVENT_FPGA_RESPONSE:
             {
                 const fpga_response_t *fpga_response = &event.event_data.fpga_response;
-                /*
-                * 只处理当前参数写入事务对应的响应。
-                * 其他迟到或无关响应不能推进测试状态。
-                */
-                if (test_context.test_state != TEST_STATE_WAIT_PARAM_RESPONSE ||
-                    fpga_response->request_id != test_context.pending_fpga_request_id ||
-                    fpga_response->operation != FPGA_OPERATION_WRITE_TEST_PARAMS)
+
+                if (!test_is_expected_fpga_response(fpga_response))
                 {
                     break;
                 }
+
                 // 当前等待的FPGA事务已经结束
                 test_context.pending_fpga_request_id = FPGA_REQUEST_ID_NONE;
-                if (fpga_response->response_status == FPGA_RESPONSE_SUCCESS)
-                {
-                    test_context.test_state = TEST_STATE_PARAM_CONFIRM;
-                }
-                else
-                {
-                    /*
-                     * CommunicateTask已经完成内部超时重传。
-                     * TestTask收到的失败状态均为本次启动事务的最终结果。
-                     */
-                    test_context.test_state = TEST_STATE_START_FAIL;
-                    (void) ui_notice_post(UI_NOTICE_COMM_ERROR);
 
-                    // 提示发布后恢复空闲，允许用户重新发起测试
-                    test_context.test_state = TEST_STATE_IDLE;
+                switch (test_context.test_state)
+                {
+                    case TEST_STATE_WAIT_PARAM_RESPONSE:
+                    {
+                        if (fpga_response->response_status == FPGA_RESPONSE_SUCCESS)
+                        {
+                            test_context.test_state = TEST_STATE_PARAM_CONFIRM;
+                            if (!test_submit_heating_request())
+                            {
+                                test_context.test_state = TEST_STATE_COMM_FAULT;
+                                test_submit_stop_request();
+                            }
+                        }
+                        else
+                        {
+                            test_context.test_state = TEST_STATE_START_FAIL;
+                            (void) ui_notice_post(UI_NOTICE_COMM_ERROR);
+                            test_context.test_state = TEST_STATE_IDLE;
+                        }
+                        break;
+                    }
+
+                    case TEST_STATE_WAIT_HEATING_RESPONSE:
+                    {
+                        if (fpga_response->response_status == FPGA_RESPONSE_SUCCESS)
+                        {
+                            test_context.test_state = TEST_STATE_HEATING;
+                        }
+                        else
+                        {
+                            test_context.test_state = TEST_STATE_COMM_FAULT;
+                            test_submit_stop_request();
+                        }
+                        break;
+                    }
+
+                    case TEST_STATE_WAIT_STOP_RESPONSE:
+                    {
+                        if (fpga_response->response_status == FPGA_RESPONSE_SUCCESS)
+                        {
+                            (void) ui_notice_post(UI_NOTICE_HEATING_START_FAILED);
+                            test_context.test_state = TEST_STATE_IDLE;
+                        }
+                        else
+                        {
+                            (void) ui_notice_post(UI_NOTICE_STOP_FAILED);
+                            test_context.test_state = TEST_STATE_COMM_FAULT;
+                        }
+                        break;
+                    }
+
+                    default:
+                        break;
                 }
+                break;
             }
+
             default:
                 break;
         }
@@ -148,8 +198,87 @@ void start_test_task(void *argument)
 }
 
 
+static uint32_t test_allocate_fpga_request_id(void)
+{
+    const uint32_t request_id = next_fpga_request_id++;
+
+    if (next_fpga_request_id == FPGA_REQUEST_ID_NONE)
+    {
+        next_fpga_request_id = 1U;
+    }
+
+    return request_id;
+}
+
+static bool test_submit_heating_request(void)
+{
+    const fpga_request_t request = {
+        .request_id = test_allocate_fpga_request_id(),
+        .operation = FPGA_OPERATION_WRITE_REGISTER,
+        .request_data.write_register = {
+            .register_address = TEST_CONTROL_REG,
+            .register_value = 0x0001U
+        }
+    };
+
+    if (!communicate_submit_request(&request))
+    {
+        return false;
+    }
+
+    test_context.pending_fpga_request_id = request.request_id;
+    test_context.test_state = TEST_STATE_WAIT_HEATING_RESPONSE;
+    return true;
+}
+
+static void test_submit_stop_request(void)
+{
+    const fpga_request_t request = {
+        .request_id = test_allocate_fpga_request_id(),
+        .operation = FPGA_OPERATION_WRITE_REGISTER,
+        .request_data.write_register = {
+            .register_address = TEST_CONTROL_REG,
+            .register_value = 0x00F0U
+        }
+    };
+
+    if (!communicate_submit_request(&request))
+    {
+        (void) ui_notice_post(UI_NOTICE_STOP_FAILED);
+        test_context.test_state = TEST_STATE_COMM_FAULT;
+        return;
+    }
+
+    test_context.pending_fpga_request_id = request.request_id;
+    test_context.test_state = TEST_STATE_WAIT_STOP_RESPONSE;
+}
+
+static bool test_is_expected_fpga_response(const fpga_response_t *response)
+{
+    if (response == NULL ||
+        response->request_id != test_context.pending_fpga_request_id)
+    {
+        return false;
+    }
+
+    switch (test_context.test_state)
+    {
+        case TEST_STATE_WAIT_PARAM_RESPONSE:
+            return response->operation == FPGA_OPERATION_WRITE_TEST_PARAMS;
+
+        case TEST_STATE_WAIT_HEATING_RESPONSE:
+        case TEST_STATE_WAIT_STOP_RESPONSE:
+            return response->operation == FPGA_OPERATION_WRITE_REGISTER;
+
+        default:
+            return false;
+    }
+}
+
 void read_fpga_temperature_timer_cb(TimerHandle_t xTimer)
 {
+    (void) xTimer;
+
     if (test_context.test_state != TEST_STATE_IDLE && test_context.test_state != TEST_STATE_HEATING)
     {
         return;

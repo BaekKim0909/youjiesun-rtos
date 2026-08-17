@@ -134,3 +134,24 @@ bool fpga_comm_send_test_params(const test_params_t *test_params)
     command_buffer[25] = (crc >> 8) & 0xFF; // CRC高字节
     return fpga_device.send_data(&fpga_device, command_buffer, 26, 1000U) == 0;
 }
+
+bool fpga_comm_send_write_register(const write_register_instruction_t *instruction)
+{
+    if (instruction == NULL)
+    {
+        return false;
+    }
+
+    uint8_t command_buffer[10] = {
+        0x01, 0x06,
+        (instruction->register_address >> 8) & 0xFF,
+        instruction->register_address & 0xFF,
+        0x00, 0x01,
+        (instruction->register_value >> 8) & 0xFF,
+        instruction->register_value & 0xFF
+    };
+    const uint16_t crc = modbus_crc16(command_buffer, 8);
+    command_buffer[8] = crc & 0xFF;
+    command_buffer[9] = (crc >> 8) & 0xFF;
+    return fpga_device.send_data(&fpga_device, command_buffer, 10, 1000U) == 0;
+}

@@ -45,6 +45,9 @@ static void communicate_process_received_frames(uint8_t *command_buffer, uint16_
 // 处理FPGA 请求队列
 static void communicate_process_request_queue(void);
 
+// 发送当前pending请求，首次发送和超时重传共用
+static bool communicate_send_pending_request(void);
+
 // 保存一条等待投递给TestTask的通讯响应
 static void communicate_prepare_response(const fpga_request_t *request, fpga_response_status_enum response_status);
 
@@ -162,16 +165,17 @@ static void communicate_process_request_queue(void)
             }
 
             case FPGA_OPERATION_WRITE_TEST_PARAMS:
+            case FPGA_OPERATION_WRITE_REGISTER:
             {
-                if (!fpga_comm_send_test_params(&request.request_data.test_params))
+                pending_request = request;
+                pending_request_retry_count = 0U;
+
+                if (!communicate_send_pending_request())
                 {
-                    communicate_prepare_response(&request, FPGA_RESPONSE_SEND_FAILED);
+                    communicate_prepare_response(&pending_request, FPGA_RESPONSE_SEND_FAILED);
                     return;
                 }
 
-                pending_request = request;
-                pending_request_start_tick = xTaskGetTickCount();
-                pending_request_retry_count = 0U;
                 pending_request_valid = true;
                 return;
             }
@@ -202,6 +206,34 @@ bool communicate_submit_request(const fpga_request_t *request)
      */
     xTaskNotify(communicate_taskHandle, FPGA_TX_EVENT, eSetBits);
     return true;
+}
+
+static bool communicate_send_pending_request(void)
+{
+    bool send_success = false;
+
+    switch (pending_request.operation)
+    {
+        case FPGA_OPERATION_WRITE_TEST_PARAMS:
+            send_success = fpga_comm_send_test_params(
+                &pending_request.request_data.test_params);
+            break;
+
+        case FPGA_OPERATION_WRITE_REGISTER:
+            send_success = fpga_comm_send_write_register(
+                &pending_request.request_data.write_register);
+            break;
+
+        default:
+            break;
+    }
+
+    if (send_success)
+    {
+        pending_request_start_tick = xTaskGetTickCount();
+    }
+
+    return send_success;
 }
 
 static void communicate_prepare_response(const fpga_request_t *request, fpga_response_status_enum response_status)
@@ -249,10 +281,9 @@ static void communicate_check_pending_timeout(void)
 
     if (++pending_request_retry_count < FPGA_WRITE_MAX_RETRY_COUNT)
     {
-        if (fpga_comm_send_test_params(&pending_request.request_data.test_params))
+        if (communicate_send_pending_request())
         {
             // 重传成功启动后，从本次UART发送完成时刻重新等待FPGA应答
-            pending_request_start_tick = xTaskGetTickCount();
             return;
         }
 

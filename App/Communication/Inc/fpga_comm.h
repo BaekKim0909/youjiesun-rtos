@@ -9,6 +9,7 @@
 #define EMPTY_ELECTRODE_CAPACITANCE_REG         (0x0000U) /* 空杯电容值 参数寄存器 */
 
 #define WRITE_RESULT_REG                        (0x000CU)   /* 写入状态判断寄存器 */
+#define TEST_CONTROL_REG                        (0x0100U)   /* 测试控制寄存器 */
 #define TEMPERATURE_REG                         (0x0101U)   /* 温度寄存器 */
 #define LID_STATE_REG                           (0x0105U)   /* 盖子状态寄存器地址 */
 #define OIL_POUR_STATE_REG                      (0x0106U)   /* 排油状态寄存器地址 */
@@ -23,8 +24,18 @@
 typedef enum
 {
     FPGA_OPERATION_READ_REGISTERS = 0, /* 读取寄存器 */
-    FPGA_OPERATION_WRITE_TEST_PARAMS /* 写入测试参数 */
+    FPGA_OPERATION_WRITE_TEST_PARAMS, /* 写入测试参数 */
+    FPGA_OPERATION_WRITE_REGISTER /* 写入单个16位寄存器 */
 } fpga_operation_enum;
+
+/**
+ * @brief 单个16位寄存器写入指令
+ */
+typedef struct
+{
+    uint16_t register_address; /* 寄存器地址 */
+    uint16_t register_value; /* 寄存器写入值 */
+} write_register_instruction_t;
 
 
 #define FPGA_REQUEST_ID_NONE 0U
@@ -43,6 +54,7 @@ typedef struct
     {
         read_instruction_t read_instruction; /* 读取寄存器参数 */
         test_params_t test_params; /* 写入FPGA的测试参数 */
+        write_register_instruction_t write_register; /* 写入单个寄存器 */
     } request_data; /* 当前通讯请求携带的数据 */
 } fpga_request_t;
 
@@ -89,4 +101,10 @@ bool fpga_comm_send_read_command(const read_instruction_t *read_instruction);
 
 // 发送测试参数
 bool fpga_comm_send_test_params(const test_params_t *test_params);
+
+/**
+ * @brief 发送单个16位寄存器写入指令
+ */
+bool fpga_comm_send_write_register(const write_register_instruction_t *instruction);
+
 #endif //YOUJIESUN_FPGA_COMM_H

@@ -20,6 +20,8 @@ const char *const tags[] =
     "pouring_tip",
     "check_temperature_prob",
     "communicate_error",
+    "heating_start_failed",
+    "stop_test_failed",
     NULL
 };
 const char *const translations[] = {
@@ -35,4 +37,6 @@ const char *const translations[] = {
     "排油中......", "draining oil......",
     "请检查温度探针", "Please check the temperature probe.",
     "通信异常", "Communication error",
+    "升温启动失败，测试已停止，请重试", "Heating failed to start. The test has stopped. Please try again.",
+    "停止测试失败，请检查设备", "Failed to stop the test. Please check the device."
 };

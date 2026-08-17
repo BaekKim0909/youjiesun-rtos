@@ -9,6 +9,7 @@
 #include "timers.h"
 #include "task.h"
 #include "queue.h"
+#include "ui_task.h"
 
 
 typedef enum
@@ -38,9 +39,14 @@ typedef struct
 // 测试事件队列
 static test_context_t test_context = {
     .test_state = TEST_STATE_IDLE,
-    .test_request = {}
+    .test_request = {},
+    .pending_fpga_request_id = FPGA_REQUEST_ID_NONE,
 };
+
 static uint32_t next_fpga_request_id = 1U;
+
+// 将最终通讯失败状态转换为UI可识别的通知原因
+static ui_notice_reason_enum test_get_ui_notice_reason(fpga_response_status_enum response_status);
 
 bool test_request_start(const test_request_t *request)
 {
@@ -116,13 +122,23 @@ void start_test_task(void *argument)
                 {
                     break;
                 }
+                // 当前等待的FPGA事务已经结束
+                test_context.pending_fpga_request_id = FPGA_REQUEST_ID_NONE;
                 if (fpga_response->response_status == FPGA_RESPONSE_SUCCESS)
                 {
                     test_context.test_state = TEST_STATE_PARAM_CONFIRM;
                 }
                 else
                 {
+                    /*
+                     * CommunicateTask已经完成内部超时重传。
+                     * TestTask收到的失败状态均为本次启动事务的最终结果。
+                     */
                     test_context.test_state = TEST_STATE_START_FAIL;
+                    (void) ui_notice_post(UI_NOTICE_COMM_ERROR);
+
+                    // 提示发布后恢复空闲，允许用户重新发起测试
+                    test_context.test_state = TEST_STATE_IDLE;
                 }
             }
             default:
@@ -134,11 +150,15 @@ void start_test_task(void *argument)
 
 void read_fpga_temperature_timer_cb(TimerHandle_t xTimer)
 {
+    if (test_context.test_state != TEST_STATE_IDLE && test_context.test_state != TEST_STATE_HEATING)
+    {
+        return;
+    }
     read_instruction_t read_instruction = {
         .start_address = TEMPERATURE_REG,
         .reg_num = 0x0002
     };
-    fpga_request_t request = {
+    const fpga_request_t request = {
         .request_id = 0,
         .operation = FPGA_OPERATION_READ_REGISTERS,
         .request_data.read_instruction = read_instruction

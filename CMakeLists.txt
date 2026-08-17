@@ -65,10 +65,11 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
         App/UI/Src/translations.c
         App/UI/Src/test_standard_page.c
         App/UI/Src/notice_message.c
-        App/Task/Src/UITask.c
+        App/Task/Src/ui_task.c
         App/Task/Src/communicate_task.c
         App/Task/Src/KeyScanTask.c
         App/Task/Src/test_task.c
+        App/Task/Src/ui_task.c
         App/Communication/Src/fpga_comm.c
         App/System/Src/system_state.c
         App/System/Src/test_standard.c

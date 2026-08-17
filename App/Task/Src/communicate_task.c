@@ -11,7 +11,9 @@
 // 当前DMA单次接收缓冲区为128Byte，完整包输出缓冲区保持相同容量
 #define FPGA_COMMAND_BUFFER_SIZE 128U
 // 写参数后等待FPGA应答的最长时间
-#define FPGA_WRITE_RESPONSE_TIMEOUT_MS            1000U
+#define FPGA_WRITE_RESPONSE_TIMEOUT_MS            (200U)
+// 重新发送的次数
+#define FPGA_WRITE_MAX_RETRY_COUNT                 5U
 
 // TestTask事件队列已满时，重试投递响应的间隔
 #define FPGA_RESPONSE_REPORT_RETRY_MS             10U
@@ -26,6 +28,8 @@ static bool pending_request_valid = false;
 static fpga_request_t pending_request;
 // 当前pending请求的发送完成时刻
 static TickType_t pending_request_start_tick = 0U;
+// 当前pending请求已经执行的超时重传次数，不包含首次发送
+static uint16_t pending_request_retry_count = 0U;
 
 
 /* -------------------------等待响应相关----------------------- */
@@ -68,7 +72,6 @@ void start_communicate_task(void *argument)
     //  任务通知事件
     uint32_t event_data = 0;
     TickType_t wait_ticks;
-    (void) argument;
 
     // 必须先绑定再启动DMA，否则DMA很快收到数据时还不知道应该唤醒哪个任务
     fpga_device.bind_rx_task(&fpga_device, xTaskGetCurrentTaskHandle());
@@ -85,21 +88,24 @@ void start_communicate_task(void *argument)
         wait_ticks = communicate_get_wait_ticks();
         // 没有数据时任务在这里阻塞，不占用CPU；RX中断到达后由xTaskNotifyFromISR唤醒
         // event_data:获取通讯任务唤醒要要处理的事件 ,portMAX_DELAY表示一直等到有数据
-        xTaskNotifyWait(0x00000000, 0xFFFFFFFF, &event_data, wait_ticks);
+        xTaskNotifyWait(0x00000000, 0xFFFFFFFFU, &event_data, wait_ticks);
         // 通知值中有FPGA串口接收事件标志位
         if (event_data & FPGA_RX_EVENT)
         {
             communicate_process_received_frames(command_buffer, FPGA_COMMAND_BUFFER_SIZE);
         }
+        // 检查是否超时
         communicate_check_pending_timeout();
 
+        // 向测试任务提交响应
         communicate_try_report_response();
-
         /*
-         * 无论本轮是不是TX通知，都检查一次队列。
-         * 这样旧事务结束后，不需要依赖额外通知才能启动队列中的下一项请求。
+         * 收到TX通知,处理发送队列
          */
-        communicate_process_request_queue();
+        if (event_data & FPGA_TX_EVENT)
+        {
+            communicate_process_request_queue();
+        }
     }
 }
 
@@ -143,54 +149,35 @@ static void communicate_process_request_queue(void)
     //
     while (xQueueReceive(fpga_request_queue, &request, 0U) == pdPASS)
     {
-        bool send_success = false;
         switch (request.operation)
         {
+            case FPGA_OPERATION_READ_REGISTERS:
+            {
+                /*
+                 * 当前读取请求不要求向业务层回传处理结果，
+                 * UART发送失败时放弃本次轮询。
+                 */
+                (void) fpga_comm_send_read_command(&request.request_data.read_instruction);
+                break;
+            }
+
             case FPGA_OPERATION_WRITE_TEST_PARAMS:
             {
-                // 发送失败
                 if (!fpga_comm_send_test_params(&request.request_data.test_params))
                 {
-                    // 响应发送失败
                     communicate_prepare_response(&request, FPGA_RESPONSE_SEND_FAILED);
                     return;
                 }
-                // 发送成功 更新等待响应请求
+
                 pending_request = request;
                 pending_request_start_tick = xTaskGetTickCount();
+                pending_request_retry_count = 0U;
                 pending_request_valid = true;
-                return; // return掉,已经启动一个需要等待应答的写事务,不发送其他请求，防止混乱
+                return;
             }
-            case FPGA_OPERATION_READ_REGISTERS:
-            {
-                // 不需要响应
-                fpga_comm_send_read_command(&request.request_data.read_instruction);
-            }
+
             default:
                 break;
-        }
-        if (send_success)
-        {
-            pending_request = request;
-            pending_request_valid = true;
-        }
-        else
-        {
-            switch (request.operation)
-            {
-                case FPGA_OPERATION_WRITE_TEST_PARAMS:
-                {
-                    const fpga_response_t response = {
-                        .request_id = request.request_id,
-                        .operation = request.operation,
-                        .response_status =
-                        FPGA_RESPONSE_SEND_FAILED
-                    };
-                    test_report_fpga_response(&response);
-                }
-                default:
-                    break;
-            }
         }
     }
 }
@@ -213,7 +200,8 @@ bool communicate_submit_request(const fpga_request_t *request)
      * 请求数据已经进入队列。
      * 任务通知只作为“队列中有新请求”的门铃。
      */
-    return xTaskNotify(communicate_taskHandle, FPGA_TX_EVENT, eSetBits) == pdPASS;
+    xTaskNotify(communicate_taskHandle, FPGA_TX_EVENT, eSetBits);
+    return true;
 }
 
 static void communicate_prepare_response(const fpga_request_t *request, fpga_response_status_enum response_status)
@@ -259,10 +247,23 @@ static void communicate_check_pending_timeout(void)
         return;
     }
 
-    communicate_prepare_response(
-        &pending_request,
-        FPGA_RESPONSE_TIMEOUT);
+    if (++pending_request_retry_count < FPGA_WRITE_MAX_RETRY_COUNT)
+    {
+        if (fpga_comm_send_test_params(&pending_request.request_data.test_params))
+        {
+            // 重传成功启动后，从本次UART发送完成时刻重新等待FPGA应答
+            pending_request_start_tick = xTaskGetTickCount();
+            return;
+        }
 
+        // UART未能启动或完成重传，通信链路已明确失败，不再等待应答
+        communicate_prepare_response(&pending_request, FPGA_RESPONSE_SEND_FAILED);
+        pending_request_valid = false;
+        return;
+    }
+
+    // 首次发送及五次重传均未收到应答，向TestTask报告最终超时
+    communicate_prepare_response(&pending_request, FPGA_RESPONSE_TIMEOUT);
     pending_request_valid = false;
 }
 

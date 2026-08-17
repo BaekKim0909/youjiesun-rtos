@@ -19,6 +19,7 @@ const char *const tags[] =
     "check_oil_cup_tip",
     "pouring_tip",
     "check_temperature_prob",
+    "communicate_error",
     NULL
 };
 const char *const translations[] = {
@@ -32,5 +33,6 @@ const char *const translations[] = {
     "请关闭盖子后重试", "Please close the lid and try again.",
     "请检查油杯后重试", "Please check the oil cup and try again later",
     "排油中......", "draining oil......",
-    "请检查温度探针", "Please check the temperature probe."
+    "请检查温度探针", "Please check the temperature probe.",
+    "通信异常", "Communication error",
 };

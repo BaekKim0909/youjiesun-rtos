@@ -28,6 +28,7 @@
 #include "timers.h"
 #include "fpga_comm.h"
 #include "test_task.h"
+#include "ui_task.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -45,6 +46,7 @@
 
 #define TEST_EVENT_QUEUE_LENGTH     (10U)
 #define FPGA_REQUEST_QUEUE_LENGTH   (16U)
+#define UI_EVENT_QUEUE_LENGTH       (1U)
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -73,9 +75,11 @@ SemaphoreHandle_t spi5_rx_semaphore = NULL;
 /* SPI5发送并接收信号量 */
 SemaphoreHandle_t spi5_tx_rx_semaphore = NULL;
 
+/* ----------------------------队列句柄------------------------------------ */
 /* FPGA 串口读取指令 发送队列 */
 QueueHandle_t test_event_queue = NULL;
 QueueHandle_t fpga_request_queue = NULL;
+QueueHandle_t ui_event_queue = NULL;
 /* USER CODE END Variables */
 /* Definitions for UITask */
 osThreadId_t UITaskHandle;
@@ -223,6 +227,11 @@ void MX_FREERTOS_Init(void)
     if (fpga_request_queue != NULL)
     {
         vQueueAddToRegistry(fpga_request_queue, "FPGA_REQUEST_QUEUE");
+    }
+    ui_event_queue = xQueueCreate(UI_EVENT_QUEUE_LENGTH, sizeof(ui_event_t));
+    if (ui_event_queue != NULL)
+    {
+        vQueueAddToRegistry(ui_event_queue, "UI_EVENT_QUEUE");
     }
     /* USER CODE END RTOS_QUEUES */
 

@@ -8,71 +8,72 @@
 // Created by 74222 on 2026/7/17.
 //
 
-// 当前DMA单次接收缓冲区为128Byte，完整包输出缓冲区保持相同容量
+// DMA单次接收缓冲区为128字节，完整帧缓冲区保持相同容量，避免取帧时发生截断
 #define FPGA_COMMAND_BUFFER_SIZE 128U
-// 写参数后等待FPGA应答的最长时间
+// 写请求发送成功后，等待FPGA应答的最长时间
 #define FPGA_WRITE_RESPONSE_TIMEOUT_MS            (200U)
-// 重新发送的次数
+// 最大发送次数：首次发送1次，超时后最多重传4次
 #define FPGA_WRITE_MAX_RETRY_COUNT                 5U
 
-// TestTask事件队列已满时，重试投递响应的间隔
+// TestTask事件队列已满时，再次尝试投递通讯结果的间隔
 #define FPGA_RESPONSE_REPORT_RETRY_MS             10U
 
 extern UART_Device fpga_device;
 
 
 /* -------------------------发送请求相关----------------------- */
-// 当前是否存在已发送但尚未收到响应的请求  表示正在等待FPGA应答
+// 是否存在已发送但尚未收到应答的写请求；同一时刻只允许存在一个等待应答的请求
 static bool pending_request_valid = false;
-//当前等待FPGA响应的请求
+// 当前等待FPGA应答的请求，用于匹配响应及超时重传
 static fpga_request_t pending_request;
-// 当前pending请求的发送完成时刻
+// 当前等待请求最近一次发送成功的时刻，用于计算应答超时
 static TickType_t pending_request_start_tick = 0U;
-// 当前pending请求已经执行的超时重传次数，不包含首次发送
+// 当前等待请求已发生的超时次数；首次发送前为0
 static uint16_t pending_request_retry_count = 0U;
 
 
-/* -------------------------等待响应相关----------------------- */
-// 等待投递给TestTask的响应
+/* -------------------------响应投递相关----------------------- */
+// 已生成但尚未成功投递给TestTask的通讯结果
 static fpga_response_t pending_response;
-// 当前是否有响应尚未成功投递给TestTask   表示FPGA事务已经结束，但结果还没有成功交给TestTask
+// 是否存在待投递结果；为true时FPGA事务已经结束，但TestTask尚未收到结果
 static bool pending_response_valid = false;
 
 
-// 处理数据包
+// 从UART接收流中提取并处理所有完整帧
 static void communicate_process_received_frames(uint8_t *command_buffer, uint16_t buffer_size);
 
-// 处理FPGA 请求队列
+// 从FPGA请求队列中取出请求并启动对应的串口事务
 static void communicate_process_request_queue(void);
 
-// 发送当前pending请求，首次发送和超时重传共用
+// 发送当前等待请求，首次发送和超时重传共用
 static bool communicate_send_pending_request(void);
 
-// 保存一条等待投递给TestTask的通讯响应
+// 根据请求生成一条待投递给TestTask的通讯结果
 static void communicate_prepare_response(const fpga_request_t *request, fpga_response_status_enum response_status);
 
-// 尝试把通讯结果投递给TestTask
+// 尝试把通讯结果投递给TestTask，队列已满时保留结果等待下次重试
 static void communicate_try_report_response(void);
 
-// 检查当前写请求是否等待应答超时
+// 检查当前写请求是否应答超时，并执行重传或上报最终失败
 static void communicate_check_pending_timeout(void);
 
-// 计算CommunicateTask下一次需要被唤醒的时间
+// 根据等待应答和等待投递状态，计算CommunicateTask的最长阻塞时间
 static TickType_t communicate_get_wait_ticks(void);
 
 /**
  * @brief FPGA串口通信任务
  *
- * 该任务是接收数据的唯一消费者。DMA中断只把字节放入环形缓冲区并发送任务通知，
- * 本任务被唤醒后负责从连续字节流中取出一包或多包完整、CRC正确的数据。
+ * 该任务是FPGA串口的事务管理者，也是接收数据的唯一消费者。DMA中断只把字节
+ * 放入环形缓冲区并发送任务通知；本任务负责提取完整帧、发送队列中的请求、匹配
+ * 写应答、执行超时重传，并将写事务结果投递给TestTask。
  *
- * 当前阶段只完成“可靠取包”，还没有根据寄存器地址解析温度、状态等业务数据。
+ * 为防止写应答与请求错配，同一时刻只允许存在一个等待FPGA应答的写事务。
  */
 void start_communicate_task(void *argument)
 {
-    // get_command成功后，完整帧会复制到该数组中
+    // get_command成功后会将一帧完整数据复制到该缓冲区
     uint8_t command_buffer[FPGA_COMMAND_BUFFER_SIZE] = {0};
-    //  任务通知事件
+    // 保存本轮唤醒时取得的任务通知事件位
     uint32_t event_data = 0;
     TickType_t wait_ticks;
 
@@ -89,21 +90,20 @@ void start_communicate_task(void *argument)
     for (;;)
     {
         wait_ticks = communicate_get_wait_ticks();
-        // 没有数据时任务在这里阻塞，不占用CPU；RX中断到达后由xTaskNotifyFromISR唤醒
-        // event_data:获取通讯任务唤醒要要处理的事件 ,portMAX_DELAY表示一直等到有数据
+        // 没有事件时在此阻塞；等待时长还受写应答超时和响应投递重试周期限制
         xTaskNotifyWait(0x00000000, 0xFFFFFFFFU, &event_data, wait_ticks);
-        // 通知值中有FPGA串口接收事件标志位
+        // RX事件表示环形缓冲区中可能出现了一个或多个完整帧
         if (event_data & FPGA_RX_EVENT)
         {
             communicate_process_received_frames(command_buffer, FPGA_COMMAND_BUFFER_SIZE);
         }
-        // 检查是否超时
+        // 即使本轮由其他事件唤醒，也必须检查正在等待的写请求是否已经超时
         communicate_check_pending_timeout();
 
-        // 向测试任务提交响应
+        // FPGA事务结束后，持续尝试将其结果可靠地交给TestTask
         communicate_try_report_response();
         /*
-         * 收到TX通知,处理发送队列
+         * TX事件只表示“请求队列中可能有新请求”，实际请求数量以队列内容为准。
          */
         if (event_data & FPGA_TX_EVENT)
         {
@@ -114,9 +114,9 @@ void start_communicate_task(void *argument)
 
 static void communicate_process_received_frames(uint8_t *command_buffer, uint16_t buffer_size)
 {
-    // 当前完整帧的实际长度，返回0表示暂时没有完整帧
+    // 当前完整帧的实际长度；get_command返回0表示暂时没有完整帧
     uint16_t command_length;
-    // 一次通知不等于一包数据：可能是半包，也可能是多个粘包 因此持续调用get_command，直到环形缓冲区暂时没有完整包为止
+    // 一次RX通知可能对应半帧或多个粘连帧，因此持续取帧直到当前没有完整帧
     while ((command_length = fpga_device.get_command(
                 &fpga_device,
                 command_buffer,
@@ -124,7 +124,7 @@ static void communicate_process_received_frames(uint8_t *command_buffer, uint16_
             )) > 0U)
     {
         bool write_success = false;
-        // 当有写入请求在等待ACK 且 获取到的帧为写入响应帧
+        // 仅在存在等待请求时尝试匹配写应答，避免普通上报帧被误判为事务响应
         if (pending_request_valid && fpga_comm_parse_write_response(
                 command_buffer, command_length, &write_success))
         {
@@ -133,7 +133,7 @@ static void communicate_process_received_frames(uint8_t *command_buffer, uint16_
         }
         else
         {
-            // 解析命令
+            // 非当前写事务的响应帧，按FPGA主动上报或读取响应进行解析
             fpga_comm_parse_command(command_buffer, command_length);
         }
     }
@@ -144,12 +144,12 @@ static void communicate_process_request_queue(void)
     fpga_request_t request;
 
 
-    // 正在等待FPGA应答，或者上一个结果还没交给TestTask时，都不能启动下一项事务。
+    // 写事务尚未结束或其结果尚未交付时，不启动下一项事务，避免请求与响应错配
     if (pending_request_valid == true || pending_response_valid == true)
     {
         return;
     }
-    //
+    // 连续处理无需等待应答的读取请求；启动一个写请求后立即退出并等待其应答
     while (xQueueReceive(fpga_request_queue, &request, 0U) == pdPASS)
     {
         switch (request.operation)
@@ -157,8 +157,8 @@ static void communicate_process_request_queue(void)
             case FPGA_OPERATION_READ_REGISTERS:
             {
                 /*
-                 * 当前读取请求不要求向业务层回传处理结果，
-                 * UART发送失败时放弃本次轮询。
+                 * 读取请求用于周期轮询，不占用pending_request，也不向业务层回传发送结果。
+                 * UART发送失败时放弃本次轮询，后续轮询仍可继续执行。
                  */
                 (void) fpga_comm_send_read_command(&request.request_data.read_instruction);
                 break;
@@ -167,6 +167,10 @@ static void communicate_process_request_queue(void)
             case FPGA_OPERATION_WRITE_TEST_PARAMS:
             case FPGA_OPERATION_WRITE_REGISTER:
             {
+                /*
+                 * 写入完整测试参数和写入单个寄存器共用同一套可靠事务流程。
+                 * 上方case不写break是有意穿透：两类请求均需等待应答、超时重传并上报结果。
+                 */
                 pending_request = request;
                 pending_request_retry_count = 0U;
 
@@ -200,10 +204,7 @@ bool communicate_submit_request(const fpga_request_t *request)
         return false;
     }
 
-    /*
-     * 请求数据已经进入队列。
-     * 任务通知只作为“队列中有新请求”的门铃。
-     */
+    // 请求数据已经进入队列；任务通知只作为“队列中有新请求”的门铃
     xTaskNotify(communicate_taskHandle, FPGA_TX_EVENT, eSetBits);
     return true;
 }
@@ -215,11 +216,13 @@ static bool communicate_send_pending_request(void)
     switch (pending_request.operation)
     {
         case FPGA_OPERATION_WRITE_TEST_PARAMS:
+            // 按协议封装并发送完整测试参数
             send_success = fpga_comm_send_test_params(
                 &pending_request.request_data.test_params);
             break;
 
         case FPGA_OPERATION_WRITE_REGISTER:
+            // 按协议封装并发送单个16位寄存器值
             send_success = fpga_comm_send_write_register(
                 &pending_request.request_data.write_register);
             break;
@@ -230,6 +233,7 @@ static bool communicate_send_pending_request(void)
 
     if (send_success)
     {
+        // 只有UART发送成功后才开始计算本轮FPGA应答等待时间
         pending_request_start_tick = xTaskGetTickCount();
     }
 
@@ -257,6 +261,7 @@ static void communicate_try_report_response(void)
 
     if (test_report_fpga_response(&pending_response))
     {
+        // TestTask已成功接收结果，可以允许后续事务继续执行
         pending_response_valid = false;
     }
 }
@@ -278,7 +283,7 @@ static void communicate_check_pending_timeout(void)
     {
         return;
     }
-
+    // 先累计本轮超时次数；未达到阈值时重新发送同一请求
     if (++pending_request_retry_count < FPGA_WRITE_MAX_RETRY_COUNT)
     {
         if (communicate_send_pending_request())
@@ -293,7 +298,7 @@ static void communicate_check_pending_timeout(void)
         return;
     }
 
-    // 首次发送及五次重传均未收到应答，向TestTask报告最终超时
+    // 首次发送及四次重传均未收到应答，向TestTask报告最终超时
     communicate_prepare_response(&pending_request, FPGA_RESPONSE_TIMEOUT);
     pending_request_valid = false;
 }
@@ -303,11 +308,13 @@ static TickType_t communicate_get_wait_ticks(void)
 {
     if (pending_response_valid)
     {
+        // TestTask队列曾经满载时，定期唤醒并重试投递，避免结果永久滞留
         return pdMS_TO_TICKS(FPGA_RESPONSE_REPORT_RETRY_MS);
     }
 
     if (!pending_request_valid)
     {
+        // 没有内部定时事务，仅等待任务通知唤醒
         return portMAX_DELAY;
     }
 

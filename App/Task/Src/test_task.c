@@ -105,8 +105,11 @@ void start_test_task(void *argument)
             {
                 if (test_context.test_state != TEST_STATE_IDLE)
                     break;
+                // 更新测试状态
                 test_context.test_request = event.event_data.test_request;
                 test_context.test_state = TEST_STATE_START_REQUEST_RECEIVED;
+
+                // 包装FPGA通讯请求
                 fpga_request_t fpga_request = {
                     .request_id = test_allocate_fpga_request_id(),
                     .operation = FPGA_OPERATION_WRITE_TEST_PARAMS,
@@ -115,6 +118,7 @@ void start_test_task(void *argument)
                 // 将请求发送到通讯任务队列中
                 if (!communicate_submit_request(&fpga_request))
                 {
+                    // 发送失败
                     test_context.test_state = TEST_STATE_IDLE;
                     break;
                 }

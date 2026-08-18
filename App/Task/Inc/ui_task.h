@@ -16,7 +16,6 @@
 typedef enum
 {
     UI_NOTICE_COMM_ERROR, /* 通用通信异常 */
-    UI_NOTICE_HEATING_START_FAILED, /* 升温失败但停止成功 */
     UI_NOTICE_STOP_FAILED /* 停止指令失败，设备状态未知 */
 } ui_notice_reason_enum;
 

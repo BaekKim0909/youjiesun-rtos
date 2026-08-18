@@ -142,9 +142,11 @@ void start_test_task(void *argument)
                 {
                     case TEST_STATE_WAIT_PARAM_RESPONSE:
                     {
+                        // 写入测试参数成功
                         if (fpga_response->response_status == FPGA_RESPONSE_SUCCESS)
                         {
                             test_context.test_state = TEST_STATE_PARAM_CONFIRM;
+                            // 下发升温指令
                             if (!test_submit_heating_request())
                             {
                                 test_context.test_state = TEST_STATE_COMM_FAULT;
@@ -178,7 +180,7 @@ void start_test_task(void *argument)
                     {
                         if (fpga_response->response_status == FPGA_RESPONSE_SUCCESS)
                         {
-                            (void) ui_notice_post(UI_NOTICE_HEATING_START_FAILED);
+                            (void) ui_notice_post(UI_NOTICE_COMM_ERROR);
                             test_context.test_state = TEST_STATE_IDLE;
                         }
                         else

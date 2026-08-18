@@ -217,14 +217,12 @@ static bool communicate_send_pending_request(void)
     {
         case FPGA_OPERATION_WRITE_TEST_PARAMS:
             // 按协议封装并发送完整测试参数
-            send_success = fpga_comm_send_test_params(
-                &pending_request.request_data.test_params);
+            send_success = fpga_comm_send_test_params(&pending_request.request_data.test_params);
             break;
 
         case FPGA_OPERATION_WRITE_REGISTER:
             // 按协议封装并发送单个16位寄存器值
-            send_success = fpga_comm_send_write_register(
-                &pending_request.request_data.write_register);
+            send_success = fpga_comm_send_write_register(&pending_request.request_data.write_register);
             break;
 
         default:

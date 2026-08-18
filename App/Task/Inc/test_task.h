@@ -23,7 +23,7 @@ typedef struct
     union
     {
         test_request_t test_request; /* UI任务提交开始测试事件携带的请求参数 */
-        fpga_response_t fpga_response;
+        fpga_response_t fpga_response; /* 通讯任务返回的响应 */
     } event_data/* 当前事件携带的数据 */;
 } test_event_t;
 

@@ -95,13 +95,27 @@ void container_init()
     lv_obj_remove_flag(Container, LV_OBJ_FLAG_SCROLLABLE);
 }
 
+void container_mid_init(void)
+{
+    Container = lv_obj_create(lv_screen_active());
+    lv_obj_set_size(Container, 800, 440);
+    lv_obj_set_pos(Container, 0, 40);
+    lv_obj_set_style_bg_color(Container, lv_color_hex(0x123867), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(Container, LV_OPA_COVER, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(Container, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(Container, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_all(Container, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_remove_flag(Container, LV_OBJ_FLAG_SCROLLABLE);
+}
+
 // Container 销毁
 void container_dispose(void)
 {
-    if (Container == NULL)
-        return;
-    lv_obj_delete(Container);
-    Container = NULL;
+    if (Container != NULL)
+    {
+        lv_obj_delete(Container);
+        Container = NULL;
+    }
 }
 
 void group_init(void)

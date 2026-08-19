@@ -56,15 +56,17 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
         App/UI/Source/Font/chinese_character_16.c
         App/UI/Source/Font/chinese_character_20.c
         App/UI/Source/Font/chinese_character_24.c
+        App/UI/Source/Font/chinese_character_72.c
         App/UI/Src/mainUI.c
         App/UI/Src/header.c
         App/UI/Src/footer.c
         App/UI/Src/test_page.c
         App/UI/Src/page_switch.c
-        App/UI/Style/Src/style_g.c
+        App/UI/Src/heat_page.c
         App/UI/Src/translations.c
         App/UI/Src/test_standard_page.c
         App/UI/Src/notice_message.c
+        App/UI/Style/Src/style_g.c
         App/Task/Src/ui_task.c
         App/Task/Src/communicate_task.c
         App/Task/Src/KeyScanTask.c

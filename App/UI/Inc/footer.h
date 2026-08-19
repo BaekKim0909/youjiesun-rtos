@@ -5,10 +5,16 @@
 #ifndef YOUJIESUN_FOOTER_H
 #define YOUJIESUN_FOOTER_H
 #include "lvgl.h"
+
 // 获取footer 对象
-lv_obj_t * footer_get(void);
+lv_obj_t *footer_get(void);
+
 // 初始化footer
 void footer_init(void);
+
 // 加载footer
 void footer_load(void);
+
+// 销毁footer
+void footer_dispose(void);
 #endif //YOUJIESUN_FOOTER_H

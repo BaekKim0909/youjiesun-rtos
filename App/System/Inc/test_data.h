@@ -28,6 +28,7 @@ typedef struct
 {
     test_params_t params; //  指令参数
     test_standard_type standard_type; // 测试类型
+    char standard_name[24]; // 测试标准
 } test_request_t;
 
 

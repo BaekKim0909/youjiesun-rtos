@@ -7,6 +7,8 @@
 
 #include <stdbool.h>
 
+#include "test_standard.h"
+
 /**
  * @brief UI通知原因
  *
@@ -24,8 +26,17 @@ typedef enum
  */
 typedef enum
 {
-    UI_EVENT_SHOW_NOTICE = 0 // 弹窗提示
+    UI_EVENT_SHOW_NOTICE = 0, // 弹窗提示
+    UI_EVENT_LOAD_HEAT_PAGE, // 加载加热界面
 } ui_event_enum;
+
+typedef struct
+{
+    char standard_name[24];
+    test_standard_type template;
+    uint16_t fill_num;
+    uint16_t rho_param;
+} ui_page_params_t;
 
 /**
  * @brief 发送给UITask的事件
@@ -37,6 +48,7 @@ typedef struct
     union
     {
         ui_notice_reason_enum notice_reason;
+        ui_page_params_t page_params;
     } event_data;
 } ui_event_t;
 
@@ -61,14 +73,8 @@ bool ui_event_init(void);
  */
 bool ui_notice_post(ui_notice_reason_enum reason);
 
-/**
- * @brief 尝试读取一条UI事件
- *
- * 仅供UITask调用，接口为非阻塞读取。
- *
- * @return true 成功读取事件
- * @return false 当前没有事件、队列未初始化或参数无效
+/*
+ * @brief 提交 UI 更新请求
  */
-bool ui_event_try_receive(ui_event_t *event);
-
+bool ui_submit_request(const ui_event_t *event);
 #endif //YOUJIESUN_UI_EVENT_H

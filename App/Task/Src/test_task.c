@@ -3,6 +3,9 @@
 //
 #include "fpga_comm.h"
 #include "test_task.h"
+
+#include <string.h>
+
 #include "communicate_task.h"
 #include "main.h"
 #include "FreeRTOS.h"
@@ -166,7 +169,24 @@ void start_test_task(void *argument)
                     {
                         if (fpga_response->response_status == FPGA_RESPONSE_SUCCESS)
                         {
+                            // 加热指令写入成功
                             test_context.test_state = TEST_STATE_HEATING;
+                            ui_event_t ui_event =
+                            {
+                                .event_type = UI_EVENT_LOAD_HEAT_PAGE,
+                                .event_data.page_params = {
+                                    .fill_num = test_context.test_request.params.fill_num,
+                                    .rho_param = test_context.test_request.params.rho_param,
+                                    .template = test_context.test_request.standard_type
+                                }
+                            };
+                            strncpy(ui_event.event_data.page_params.standard_name,
+                                    test_context.test_request.standard_name,
+                                    sizeof(test_context.test_request.standard_name) - 1U);
+                            ui_event.event_data.page_params.standard_name[
+                                sizeof(test_context.test_request.standard_name) - 1U] = '\0';
+
+                            ui_submit_request(&ui_event);
                         }
                         else
                         {
@@ -288,6 +308,9 @@ void read_fpga_temperature_timer_cb(TimerHandle_t xTimer)
     if (test_context.test_state != TEST_STATE_IDLE && test_context.test_state != TEST_STATE_HEATING)
     {
         return;
+    }
+    if (test_context.test_state == TEST_STATE_HEATING)
+    {
     }
     read_instruction_t read_instruction = {
         .start_address = TEMPERATURE_REG,

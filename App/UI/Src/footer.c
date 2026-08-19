@@ -174,6 +174,21 @@ void footer_load()
     lv_obj_add_event_cb(info_page_btn, navigation_bar_button_defocus, LV_EVENT_DEFOCUSED, (void *) INFO_PAGE);
 }
 
+// 销毁footer
+void footer_dispose(void)
+{
+    if (footer != NULL)
+    {
+        if (navigation_group != NULL)
+        {
+            lv_group_remove_all_objs(navigation_group);
+        }
+
+        lv_obj_delete(footer);
+        footer = NULL;
+    }
+}
+
 /*
  * @brief 导航栏按钮聚焦事件
  */

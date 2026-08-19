@@ -12,6 +12,7 @@ typedef enum
     ELECTRODE_PAGE,
     SETTING_PAGE,
     INFO_PAGE,
+    HEAT_PAGE,
 } Page_Index;
 
 extern Page_Index current_page_index_g;
@@ -30,6 +31,9 @@ lv_obj_t *container_get(void);
 
 // 容器初始化
 void container_init(void);
+
+// 容器初始化(占据footer 空间)
+void container_mid_init(void);
 
 // Container 销毁
 void container_dispose(void);

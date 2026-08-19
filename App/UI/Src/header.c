@@ -4,6 +4,7 @@
 
 #include "header.h"
 #include "main.h"
+#include "mainUI.h"
 #include "system_state.h"
 #include "system_structs.h"
 LV_IMAGE_DECLARE(LidOpen);
@@ -188,29 +189,6 @@ static void update_device_state_cb(lv_timer_t *timer)
     lv_obj_t *lid_state_img = lv_obj_get_child_by_name(header, "lid_state_img");
     lv_obj_t *pour_oil_img = lv_obj_get_child_by_name(header, "pour_oil_img");
     lv_obj_t *oil_cup_img = lv_obj_get_child_by_name(header, "oil_cup_img");
-
-    if (temperature_label != NULL)
-    {
-        if (device_state.oil_cup_temperature > 200.0f)
-        {
-            lv_label_set_text(temperature_label, "INVALID");
-        }
-        else
-        {
-            lv_label_set_text_fmt(temperature_label, "%.1f℃", device_state.oil_cup_temperature);
-        }
-    }
-    if (temperature_img != NULL)
-    {
-        if (device_state.oil_cup_temperature >= 40.0f)
-        {
-            lv_image_set_src(temperature_img, &TemperatureHigh);
-        }
-        else
-        {
-            lv_image_set_src(temperature_img, &TemperatureNormal);
-        }
-    }
     if (lid_state_img != NULL)
     {
         if (device_state.lid_state == 0)
@@ -247,5 +225,35 @@ static void update_device_state_cb(lv_timer_t *timer)
             /* code */
             lv_image_set_src(oil_cup_img, &OilCupAbnormal);
         }
+    }
+    if (temperature_label != NULL)
+    {
+        if (device_state.oil_cup_temperature > 200.0f)
+        {
+            lv_label_set_text(temperature_label, "INVALID");
+        }
+        else
+        {
+            lv_label_set_text_fmt(temperature_label, "%.1f℃", device_state.oil_cup_temperature);
+        }
+    }
+    if (temperature_img != NULL)
+    {
+        if (device_state.oil_cup_temperature >= 40.0f)
+        {
+            lv_image_set_src(temperature_img, &TemperatureHigh);
+        }
+        else
+        {
+            lv_image_set_src(temperature_img, &TemperatureNormal);
+        }
+    }
+    if (current_page_index_g == HEAT_PAGE)
+    {
+        lv_obj_t *container = container_get();
+        lv_obj_t *temperature_label_of_container = lv_obj_get_child_by_name(container, "temperature_label");
+        if (temperature_label_of_container != NULL &&
+            lv_obj_check_type(temperature_label_of_container, &lv_label_class))
+            lv_label_set_text_fmt(temperature_label_of_container, "%.1f", device_state.oil_cup_temperature);
     }
 }

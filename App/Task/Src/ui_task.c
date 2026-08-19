@@ -3,10 +3,13 @@
 #include "lvgl.h"
 #include "notice_message.h"
 #include "ui_task.h"
+
+#include "heat_page.h"
 #include "main.h"
 //
 // Created by 74222 on 2026/7/14.
 //
+extern lv_indev_t *indev_keypad;
 
 // 将UI通知原因转换为提示信息
 static notice_message_t ui_notice_reason_to_notice_message(const ui_notice_reason_enum reason);
@@ -41,6 +44,15 @@ static void ui_process_events(void)
                 show_notice_message_box(notice_message);
                 break;
             }
+            case UI_EVENT_LOAD_HEAT_PAGE:
+                container_dispose();
+                container_mid_init();
+                lv_indev_set_group(indev_keypad, NULL);
+                footer_dispose();
+                load_heat_page(event.event_data.page_params.standard_name,
+                               event.event_data.page_params.template,
+                               event.event_data.page_params.rho_param);
+                break;
 
             default:
                 break;
@@ -87,4 +99,13 @@ bool ui_notice_post(const ui_notice_reason_enum reason)
     };
 
     return xQueueOverwrite(ui_event_queue, &event) == pdPASS;
+}
+
+bool ui_submit_request(const ui_event_t *event)
+{
+    if (ui_event_queue == NULL)
+    {
+        return false;
+    }
+    return xQueueOverwrite(ui_event_queue, event) == pdPASS;
 }

@@ -22,6 +22,11 @@ const char *const tags[] =
     "communicate_error",
     "heating_start_failed",
     "stop_test_failed",
+    "start_test_error",
+    "stop_tip_message",
+    "progress_1/3",
+    "progress_1/2",
+    "heat",
     NULL
 };
 const char *const translations[] = {
@@ -38,5 +43,10 @@ const char *const translations[] = {
     "请检查温度探针", "Please check the temperature probe.",
     "通信异常", "Communication error",
     "升温启动失败，测试已停止，请重试", "Heating failed to start. The test has stopped. Please try again.",
-    "停止测试失败，请检查设备", "Failed to stop the test. Please check the device."
+    "停止测试失败，请检查设备", "Failed to stop the test. Please check the device.",
+    "开始测试失败!", "Start error!",
+    "⚠测试中,按下任意键停止", "⚠Testing... Press any key to stop",
+    "测试进度: 1/3", "STEP: 1/3",
+    "测试进度: 1/2", "STEP: 1/2",
+    "加热", "Heating",
 };

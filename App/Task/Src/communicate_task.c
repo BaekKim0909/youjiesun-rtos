@@ -4,6 +4,7 @@
 #include "main.h"
 #include "fpga_comm.h"
 #include "test_task.h"
+#include "communicate_task.h"
 //
 // Created by 74222 on 2026/7/17.
 //

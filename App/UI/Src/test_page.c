@@ -25,6 +25,7 @@ static void widgets_focus_cb(lv_event_t *e);
 
 static void widgets_defocus_cb(lv_event_t *e);
 
+// 开始测试回调函数
 static void start_test_cb(lv_event_t *e);
 
 void load_start_test_page(void)
@@ -256,7 +257,7 @@ static void start_test_cb(lv_event_t *e)
     uint32_t selected_electrode_id = lv_dropdown_get_selected(electrode_dd);
     uint16_t rho_param = lv_dropdown_get_selected(rho_dd);
 
-    const test_request_t test_request = {
+    test_request_t test_request = {
         .params =
         {
             .empty_cell_capacitance = electrode_list[selected_electrode_id].capacitance,
@@ -269,10 +270,22 @@ static void start_test_cb(lv_event_t *e)
         },
         .standard_type = selected_test_standard_list[selected_standard_id].template
     };
+
+    // 数组成员不能直接使用另一个数组赋值，需复制字符串内容。
+    strncpy(test_request.standard_name,
+            selected_test_standard_list[selected_standard_id].standard_name,
+            sizeof(test_request.standard_name) - 1U);
+    test_request.standard_name[sizeof(test_request.standard_name) - 1U] = '\0';
+
     if (!test_request_start(&test_request))
     {
         // 开始测试失败
-        return;
+        const notice_message_t notice_message =
+        {
+            .result_type = NOTICE_ERROR,
+            .message = lv_translation_get("start_test_error")
+        };
+        show_notice_message_box(notice_message);
     }
 }
 

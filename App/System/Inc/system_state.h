@@ -15,4 +15,5 @@ typedef struct
 } DeviceState_t;
 
 extern DeviceState_t device_state;
+extern uint16_t current_test_state_g;
 #endif //YOUJIESUN_SYSTEM_STATE_H

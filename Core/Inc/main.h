@@ -52,7 +52,7 @@ extern osSemaphoreId_t ScreenFlushSemaphoreHandle;
 extern SemaphoreHandle_t spi5_tx_semaphore;
 extern SemaphoreHandle_t spi5_rx_semaphore;
 extern SemaphoreHandle_t spi5_tx_rx_semaphore;
-extern TimerHandle_t read_temperature_timer;
+extern TimerHandle_t fpga_communication_timer;
 extern TIM_HandleTypeDef htim2;
 extern UART_HandleTypeDef huart4;
 extern UART_HandleTypeDef huart2;

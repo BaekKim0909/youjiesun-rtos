@@ -10,3 +10,4 @@ DeviceState_t device_state = {
     .pour_state = 0,
     .oil_cup_temperature = 0
 };
+uint16_t current_test_state_g = 0;

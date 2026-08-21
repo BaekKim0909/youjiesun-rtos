@@ -62,7 +62,7 @@
 TaskHandle_t communicate_taskHandle = NULL;
 TaskHandle_t test_taskHandle = NULL;
 
-TimerHandle_t read_temperature_timer = NULL;
+TimerHandle_t fpga_communication_timer = NULL;
 
 
 /*
@@ -105,7 +105,7 @@ const osSemaphoreAttr_t ScreenFlushSemaphore_attributes = {
 /* USER CODE BEGIN FunctionPrototypes */
 void start_test_task(void *argument);
 
-void read_fpga_temperature_timer_cb(TimerHandle_t xTimer);
+void fpga_communication_timer_cb(TimerHandle_t xTimer);
 
 void start_communicate_task(void *argument);
 
@@ -212,8 +212,8 @@ void MX_FREERTOS_Init(void)
 
     /* USER CODE BEGIN RTOS_TIMERS */
     /* start timers, add new ones, ... */
-    read_temperature_timer = xTimerCreate("read_fpga_temperature_timer", pdMS_TO_TICKS(1000U),pdTRUE, NULL,
-                                          read_fpga_temperature_timer_cb);
+    fpga_communication_timer = xTimerCreate("fpga_communication_timer", pdMS_TO_TICKS(1000U),pdTRUE, NULL,
+                                            fpga_communication_timer_cb);
     /* USER CODE END RTOS_TIMERS */
 
     /* USER CODE BEGIN RTOS_QUEUES */
@@ -300,7 +300,7 @@ __weak void start_test_task(void *argument)
     }
 }
 
-__weak void read_fpga_temperature_timer_cb(TimerHandle_t xTimer)
+__weak void fpga_communication_timer_cb(TimerHandle_t xTimer)
 {
 }
 

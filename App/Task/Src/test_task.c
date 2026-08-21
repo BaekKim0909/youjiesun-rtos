@@ -12,6 +12,7 @@
 #include "timers.h"
 #include "task.h"
 #include "queue.h"
+#include "system_state.h"
 #include "ui_task.h"
 
 
@@ -23,6 +24,8 @@ typedef enum
     TEST_STATE_PARAM_CONFIRM, // FPGA确认收到参数
     TEST_STATE_WAIT_HEATING_RESPONSE, // 等待FPGA确认升温指令
     TEST_STATE_HEATING, // 加热阶段
+    TEST_STATE_HEATING_TEMPERATURE_ACHIEVED, // 温度达到预设值
+    TEST_STATE_WAIT_FIRST_DIELECTRIC_LOSS_TEST, // 等待FPGA确认第一次介损测试指令
     TEST_STATE_WAIT_STOP_RESPONSE, // 等待FPGA确认停止指令
     TEST_STATE_COMM_FAULT, // 通信故障，无法确认设备已停止
     TEST_STATE_START_FAIL, // 测试启动失败
@@ -58,11 +61,20 @@ static uint32_t test_allocate_fpga_request_id(void);
 // 提交升温请求
 static bool test_submit_heating_request(void);
 
+// 提交第一次介损测试请求
+static bool test_submit_first_dielectric_loss_test(void);
+
 // 提交停止请求并进入相应等待或故障状态
 static void test_submit_stop_request(void);
 
 // 判断响应是否属于当前等待的写事务
 static bool test_is_expected_fpga_response(const fpga_response_t *response);
+
+// 读取油杯温度
+static void read_oil_cup_temperature(void);
+
+// 读取fpga状态
+static void read_fpga_state(void);
 
 bool test_request_start(const test_request_t *request)
 {
@@ -97,7 +109,7 @@ bool test_report_fpga_response(const fpga_response_t *response)
 void start_test_task(void *argument)
 {
     test_event_t event;
-    xTimerStart(read_temperature_timer, pdMS_TO_TICKS(1000U));
+    xTimerStart(fpga_communication_timer, pdMS_TO_TICKS(1000U));
     for (;;)
     {
         if (xQueueReceive(test_event_queue, &event,portMAX_DELAY) != pdPASS)
@@ -257,6 +269,26 @@ static bool test_submit_heating_request(void)
     return true;
 }
 
+static bool test_submit_first_dielectric_loss_test(void)
+{
+    const fpga_request_t request =
+    {
+        .request_id = test_allocate_fpga_request_id(),
+        .operation = FPGA_OPERATION_WRITE_REGISTER,
+        .request_data.write_register = {
+            .register_address = TEST_CONTROL_REG,
+            .register_value = 0x0002U
+        }
+    };
+    if (!communicate_submit_request(&request))
+    {
+        return false;
+    }
+    test_context.pending_fpga_request_id = request.request_id;
+    test_context.test_state = TEST_STATE_WAIT_FIRST_DIELECTRIC_LOSS_TEST;
+    return true;
+}
+
 static void test_submit_stop_request(void)
 {
     const fpga_request_t request = {
@@ -301,26 +333,68 @@ static bool test_is_expected_fpga_response(const fpga_response_t *response)
     }
 }
 
-void read_fpga_temperature_timer_cb(TimerHandle_t xTimer)
+void fpga_communication_timer_cb(TimerHandle_t xTimer)
 {
     (void) xTimer;
 
-    if (test_context.test_state != TEST_STATE_IDLE && test_context.test_state != TEST_STATE_HEATING)
+    switch (test_context.test_state)
     {
-        return;
+        case TEST_STATE_IDLE:
+        case TEST_STATE_HEATING:
+            read_oil_cup_temperature();
+            break;
+        case TEST_STATE_HEATING_TEMPERATURE_ACHIEVED:
+            read_fpga_state();
+            break;
+        default:
+            break;
     }
-    if (test_context.test_state == TEST_STATE_HEATING)
+}
+
+static void read_oil_cup_temperature(void)
+{
+    if (test_context.test_state == TEST_STATE_HEATING && device_state.oil_cup_temperature >= (float) test_context.
+        test_request.params.temperature)
     {
+        test_context.test_state = TEST_STATE_HEATING_TEMPERATURE_ACHIEVED;
+        return;
     }
     read_instruction_t read_instruction = {
         .start_address = TEMPERATURE_REG,
         .reg_num = 0x0002
     };
     const fpga_request_t request = {
-        .request_id = 0,
+        .request_id = FPGA_REQUEST_ID_NONE,
         .operation = FPGA_OPERATION_READ_REGISTERS,
         .request_data.read_instruction = read_instruction
     };
 
     communicate_submit_request(&request);
+}
+
+static void read_fpga_state(void)
+{
+    if (current_test_state_g != 0x0002)
+    {
+        const read_instruction_t read_instruction = {
+            .start_address = TEST_STATE_REG,
+            .reg_num = 0x0001
+        };
+        const fpga_request_t request = {
+            .request_id = FPGA_REQUEST_ID_NONE,
+            .operation = FPGA_OPERATION_READ_REGISTERS,
+            .request_data.read_instruction = read_instruction
+        };
+        communicate_submit_request(&request);
+    }
+    else
+    {
+        switch (test_context.test_state)
+        {
+            case TEST_STATE_HEATING_TEMPERATURE_ACHIEVED:
+                test_submit_first_dielectric_loss_test();
+            default:
+                break;
+        }
+    }
 }

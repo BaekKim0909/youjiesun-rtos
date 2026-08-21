@@ -11,6 +11,7 @@
 #define WRITE_RESULT_REG                        (0x000CU)   /* 写入状态判断寄存器 */
 #define TEST_CONTROL_REG                        (0x0100U)   /* 测试控制寄存器 */
 #define TEMPERATURE_REG                         (0x0101U)   /* 温度寄存器 */
+#define TEST_STATE_REG                          (0x0104U)   /* 测试状态寄存器 0：空闲 1：运行中 2: 当前测试步骤测试完成*/
 #define LID_STATE_REG                           (0x0105U)   /* 盖子状态寄存器地址 */
 #define OIL_POUR_STATE_REG                      (0x0106U)   /* 排油状态寄存器地址 */
 #define OIL_CUP_STATE_REG                       (0x0107U)   /* 油杯状态寄存器地址 */

@@ -23,12 +23,12 @@ extern UART_Device fpga_device;
 
 
 /* -------------------------发送请求相关----------------------- */
-// 是否存在已发送但尚未收到应答的写请求；同一时刻只允许存在一个等待应答的请求
-static bool pending_request_valid = false;
+// 是否正在等待 FPGA 对写请求的应答;同一时刻只允许存在一个等待应答的请求
+static bool awaiting_fpga_write_response = false;
 // 当前等待FPGA应答的请求，用于匹配响应及超时重传
 static fpga_request_t pending_request;
 // 当前等待请求最近一次发送成功的时刻，用于计算应答超时
-static TickType_t pending_request_start_tick = 0U;
+static TickType_t await_response_start_tick = 0U;
 // 当前等待请求已发生的超时次数；首次发送前为0
 static uint16_t pending_request_retry_count = 0U;
 
@@ -36,8 +36,8 @@ static uint16_t pending_request_retry_count = 0U;
 /* -------------------------响应投递相关----------------------- */
 // 已生成但尚未成功投递给TestTask的通讯结果
 static fpga_response_t pending_response;
-// 是否存在待投递结果；为true时FPGA事务已经结束，但TestTask尚未收到结果
-static bool pending_response_valid = false;
+// 是否存在待投递结果；为true时FPGA事务已经结束，但TestTask尚未收到Response结果
+static bool response_report_pending = false;
 
 
 // 从UART接收流中提取并处理所有完整帧
@@ -126,11 +126,11 @@ static void communicate_process_received_frames(uint8_t *command_buffer, uint16_
     {
         bool write_success = false;
         // 仅在存在等待请求时尝试匹配写应答，避免普通上报帧被误判为事务响应
-        if (pending_request_valid && fpga_comm_parse_write_response(
+        if (awaiting_fpga_write_response && fpga_comm_parse_write_response(
                 command_buffer, command_length, &write_success))
         {
             communicate_prepare_response(&pending_request, write_success ? FPGA_RESPONSE_SUCCESS : FPGA_RESPONSE_FAIL);
-            pending_request_valid = false;
+            awaiting_fpga_write_response = false;
         }
         else
         {
@@ -146,7 +146,7 @@ static void communicate_process_request_queue(void)
 
 
     // 写事务尚未结束或其结果尚未交付时，不启动下一项事务，避免请求与响应错配
-    if (pending_request_valid == true || pending_response_valid == true)
+    if (awaiting_fpga_write_response == true || response_report_pending == true)
     {
         return;
     }
@@ -181,7 +181,7 @@ static void communicate_process_request_queue(void)
                     return;
                 }
 
-                pending_request_valid = true;
+                awaiting_fpga_write_response = true;
                 return;
             }
 
@@ -233,7 +233,7 @@ static bool communicate_send_pending_request(void)
     if (send_success)
     {
         // 只有UART发送成功后才开始计算本轮FPGA应答等待时间
-        pending_request_start_tick = xTaskGetTickCount();
+        await_response_start_tick = xTaskGetTickCount();
     }
 
     return send_success;
@@ -248,12 +248,12 @@ static void communicate_prepare_response(const fpga_request_t *request, fpga_res
     pending_response.request_id = request->request_id;
     pending_response.operation = request->operation;
     pending_response.response_status = response_status;
-    pending_response_valid = true;
+    response_report_pending = true;
 }
 
 static void communicate_try_report_response(void)
 {
-    if (!pending_response_valid)
+    if (!response_report_pending)
     {
         return;
     }
@@ -261,13 +261,13 @@ static void communicate_try_report_response(void)
     if (test_report_fpga_response(&pending_response))
     {
         // TestTask已成功接收结果，可以允许后续事务继续执行
-        pending_response_valid = false;
+        response_report_pending = false;
     }
 }
 
 static void communicate_check_pending_timeout(void)
 {
-    if (!pending_request_valid)
+    if (!awaiting_fpga_write_response)
     {
         return;
     }
@@ -276,7 +276,7 @@ static void communicate_check_pending_timeout(void)
             pdMS_TO_TICKS(FPGA_WRITE_RESPONSE_TIMEOUT_MS);
 
     const TickType_t elapsed_ticks =
-            xTaskGetTickCount() - pending_request_start_tick;
+            xTaskGetTickCount() - await_response_start_tick;
 
     if (elapsed_ticks < timeout_ticks)
     {
@@ -293,25 +293,25 @@ static void communicate_check_pending_timeout(void)
 
         // UART未能启动或完成重传，通信链路已明确失败，不再等待应答
         communicate_prepare_response(&pending_request, FPGA_RESPONSE_SEND_FAILED);
-        pending_request_valid = false;
+        awaiting_fpga_write_response = false;
         return;
     }
 
     // 首次发送及四次重传均未收到应答，向TestTask报告最终超时
     communicate_prepare_response(&pending_request, FPGA_RESPONSE_TIMEOUT);
-    pending_request_valid = false;
+    awaiting_fpga_write_response = false;
 }
 
 
 static TickType_t communicate_get_wait_ticks(void)
 {
-    if (pending_response_valid)
+    if (response_report_pending)
     {
         // TestTask队列曾经满载时，定期唤醒并重试投递，避免结果永久滞留
         return pdMS_TO_TICKS(FPGA_RESPONSE_REPORT_RETRY_MS);
     }
 
-    if (!pending_request_valid)
+    if (!awaiting_fpga_write_response)
     {
         // 没有内部定时事务，仅等待任务通知唤醒
         return portMAX_DELAY;
@@ -321,7 +321,7 @@ static TickType_t communicate_get_wait_ticks(void)
             pdMS_TO_TICKS(FPGA_WRITE_RESPONSE_TIMEOUT_MS);
 
     const TickType_t elapsed_ticks =
-            xTaskGetTickCount() - pending_request_start_tick;
+            xTaskGetTickCount() - await_response_start_tick;
 
     if (elapsed_ticks >= timeout_ticks)
     {

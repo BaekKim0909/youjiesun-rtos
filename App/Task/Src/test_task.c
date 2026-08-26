@@ -25,7 +25,8 @@ typedef enum
     TEST_STATE_WAIT_HEATING_RESPONSE, // 等待FPGA确认升温指令
     TEST_STATE_HEATING, // 加热阶段
     TEST_STATE_HEATING_TEMPERATURE_ACHIEVED, // 温度达到预设值
-    TEST_STATE_WAIT_FIRST_DIELECTRIC_LOSS_TEST, // 等待FPGA确认第一次介损测试指令
+    TEST_STATE_WAIT_FIRST_DIELECTRIC_LOSS_TEST_RESPONSE, // 等待FPGA确认第一次介损测试指令
+    TEST_STATE_FIRST_DIELECTRIC_LOSS_TEST, // 第一次介损测试
     TEST_STATE_WAIT_STOP_RESPONSE, // 等待FPGA确认停止指令
     TEST_STATE_COMM_FAULT, // 通信故障，无法确认设备已停止
     TEST_STATE_START_FAIL, // 测试启动失败
@@ -42,7 +43,8 @@ typedef struct
 {
     test_state_enum test_state; // 测试状态
     test_request_t test_request; // 测试请求的数据
-    uint32_t pending_fpga_request_id; // 当前正在等待响应的FPGA请求编号
+    uint16_t current_fill_round; // 当前填充轮次
+    uint32_t awaiting_fpga_response_id; // 当前正在等待响应的FPGA请求编号
 } test_context_t;
 
 /* ---------------------------------VARIABLE----------------------------------------*/
@@ -50,7 +52,8 @@ typedef struct
 static test_context_t test_context = {
     .test_state = TEST_STATE_IDLE,
     .test_request = {},
-    .pending_fpga_request_id = FPGA_REQUEST_ID_NONE,
+    .current_fill_round = 1,
+    .awaiting_fpga_response_id = FPGA_REQUEST_ID_NONE,
 };
 
 static uint32_t next_fpga_request_id = 1U;
@@ -123,7 +126,7 @@ void start_test_task(void *argument)
                 // 更新测试状态
                 test_context.test_request = event.event_data.test_request;
                 test_context.test_state = TEST_STATE_START_REQUEST_RECEIVED;
-
+                test_context.current_fill_round = 1;
                 // 包装FPGA通讯请求
                 fpga_request_t fpga_request = {
                     .request_id = test_allocate_fpga_request_id(),
@@ -137,7 +140,7 @@ void start_test_task(void *argument)
                     test_context.test_state = TEST_STATE_IDLE;
                     break;
                 }
-                test_context.pending_fpga_request_id = fpga_request.request_id;
+                test_context.awaiting_fpga_response_id = fpga_request.request_id;
                 test_context.test_state = TEST_STATE_WAIT_PARAM_RESPONSE;
                 break;
             }
@@ -151,7 +154,7 @@ void start_test_task(void *argument)
                 }
 
                 // 当前等待的FPGA事务已经结束
-                test_context.pending_fpga_request_id = FPGA_REQUEST_ID_NONE;
+                test_context.awaiting_fpga_response_id = FPGA_REQUEST_ID_NONE;
 
                 switch (test_context.test_state)
                 {
@@ -207,7 +210,14 @@ void start_test_task(void *argument)
                         }
                         break;
                     }
-
+                    case TEST_STATE_WAIT_FIRST_DIELECTRIC_LOSS_TEST_RESPONSE:
+                    {
+                        if (fpga_response->response_status == FPGA_RESPONSE_SUCCESS)
+                        {
+                            // 第一次介损测试指令写入成功
+                            test_context.test_state = TEST_STATE_FIRST_DIELECTRIC_LOSS_TEST;
+                        }
+                    }
                     case TEST_STATE_WAIT_STOP_RESPONSE:
                     {
                         if (fpga_response->response_status == FPGA_RESPONSE_SUCCESS)
@@ -264,7 +274,7 @@ static bool test_submit_heating_request(void)
         return false;
     }
 
-    test_context.pending_fpga_request_id = request.request_id;
+    test_context.awaiting_fpga_response_id = request.request_id;
     test_context.test_state = TEST_STATE_WAIT_HEATING_RESPONSE;
     return true;
 }
@@ -284,8 +294,8 @@ static bool test_submit_first_dielectric_loss_test(void)
     {
         return false;
     }
-    test_context.pending_fpga_request_id = request.request_id;
-    test_context.test_state = TEST_STATE_WAIT_FIRST_DIELECTRIC_LOSS_TEST;
+    test_context.awaiting_fpga_response_id = request.request_id;
+    test_context.test_state = TEST_STATE_WAIT_FIRST_DIELECTRIC_LOSS_TEST_RESPONSE;
     return true;
 }
 
@@ -307,14 +317,14 @@ static void test_submit_stop_request(void)
         return;
     }
 
-    test_context.pending_fpga_request_id = request.request_id;
+    test_context.awaiting_fpga_response_id = request.request_id;
     test_context.test_state = TEST_STATE_WAIT_STOP_RESPONSE;
 }
 
 static bool test_is_expected_fpga_response(const fpga_response_t *response)
 {
     if (response == NULL ||
-        response->request_id != test_context.pending_fpga_request_id)
+        response->request_id != test_context.awaiting_fpga_response_id)
     {
         return false;
     }
@@ -326,6 +336,7 @@ static bool test_is_expected_fpga_response(const fpga_response_t *response)
 
         case TEST_STATE_WAIT_HEATING_RESPONSE:
         case TEST_STATE_WAIT_STOP_RESPONSE:
+        case TEST_STATE_WAIT_FIRST_DIELECTRIC_LOSS_TEST_RESPONSE:
             return response->operation == FPGA_OPERATION_WRITE_REGISTER;
 
         default:
@@ -392,7 +403,17 @@ static void read_fpga_state(void)
         switch (test_context.test_state)
         {
             case TEST_STATE_HEATING_TEMPERATURE_ACHIEVED:
-                test_submit_first_dielectric_loss_test();
+                if (test_context.test_request.standard_type == FULL_TEMPLATE || test_context.test_request.standard_type
+                    == NO_DC_TEMPLATE)
+                {
+                    if (test_context.current_fill_round == 1)
+                    {
+                        bool result = test_submit_first_dielectric_loss_test();
+                    }
+                    else if (test_context.current_fill_round == 2)
+                    {
+                    }
+                }
             default:
                 break;
         }

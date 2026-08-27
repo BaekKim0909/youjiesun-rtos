@@ -192,7 +192,7 @@ static void communicate_process_request_queue(void)
                     awaiting_fpga_write_response = true;
                 else if (request.operation == FPGA_OPERATION_READ_OUTCOME)
                     awaiting_test_outcome_response = true;
-                return;
+                break;
             }
 
             default:
@@ -280,7 +280,7 @@ static void communicate_try_report_response(void)
 
 static void communicate_check_pending_timeout(void)
 {
-    if (!awaiting_fpga_write_response || !awaiting_test_outcome_response)
+    if (!awaiting_fpga_write_response && !awaiting_test_outcome_response)
     {
         return;
     }
@@ -326,7 +326,7 @@ static TickType_t communicate_get_wait_ticks(void)
         return pdMS_TO_TICKS(FPGA_RESPONSE_REPORT_RETRY_MS);
     }
 
-    if (!awaiting_fpga_write_response || !awaiting_test_outcome_response)
+    if (!awaiting_fpga_write_response && !awaiting_test_outcome_response)
     {
         // 没有内部定时事务，仅等待任务通知唤醒
         return portMAX_DELAY;

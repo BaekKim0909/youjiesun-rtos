@@ -40,6 +40,11 @@ void fpga_comm_parse_command(const uint8_t *command_buf, uint16_t length)
                 case OIL_CUP_STATE_REG:
                     device_state.oil_cup_state = temp_value;
                     break;
+                case TEST_STATE_REG:
+                    device_state.current_step_state = temp_value;
+                    break;
+                case TEST_REMAIN_TIME_REG:
+                    device_state.remain_test_time = temp_value;
                 default:
                     break;
             }
@@ -83,7 +88,33 @@ bool fpga_comm_parse_write_response(const uint8_t *command_buffer, uint16_t comm
     {
         return false;
     }
+    if (write_result == 0x00U)
+        return false;
     *write_accepted = write_result == 1U;
+    return true;
+}
+
+bool fpga_comm_parse_outcome_response(const uint8_t *command_buffer, uint16_t command_length)
+{
+    if (command_buffer == NULL || command_length != 36)
+    {
+        return false;
+    }
+    const uint16_t start_address =
+            ((uint16_t) command_buffer[2] << 8) |
+            command_buffer[3];
+
+    const uint16_t register_count =
+            ((uint16_t) command_buffer[4] << 8) |
+            command_buffer[5];
+
+    if (command_buffer[0] != 0x01 ||
+        command_buffer[1] != 0x03 ||
+        start_address != PERMITTIVITY_OUTCOME_REG ||
+        register_count != 0x1C)
+    {
+        return false;
+    }
     return true;
 }
 

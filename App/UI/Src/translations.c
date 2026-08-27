@@ -25,8 +25,11 @@ const char *const tags[] =
     "start_test_error",
     "stop_tip_message",
     "progress_1/3",
+    "progress_2/3",
     "progress_1/2",
+    "progress_2/2",
     "heat",
+    "dielectric_loss",
     NULL
 };
 const char *const translations[] = {
@@ -47,6 +50,9 @@ const char *const translations[] = {
     "开始测试失败!", "Start error!",
     "⚠测试中,按下任意键停止", "⚠Testing... Press any key to stop",
     "测试进度: 1/3", "STEP: 1/3",
+    "测试进度: 2/3", "STEP: 2/3",
     "测试进度: 1/2", "STEP: 1/2",
+    "测试进度: 2/2", "STEP: 2/2",
     "加热", "Heating",
+    "介损测量", "Dielectric Loss Test",
 };

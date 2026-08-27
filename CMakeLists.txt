@@ -66,6 +66,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
         App/UI/Src/translations.c
         App/UI/Src/test_standard_page.c
         App/UI/Src/notice_message.c
+        App/UI/Src/dielectric_loss_test_page.c
         App/UI/Style/Src/style_g.c
         App/Task/Src/ui_task.c
         App/Task/Src/communicate_task.c

@@ -32,6 +32,8 @@ static TickType_t await_response_start_tick = 0U;
 // 当前等待请求已发生的超时次数；首次发送前为0
 static uint16_t pending_request_retry_count = 0U;
 
+static bool awaiting_test_outcome_response = false;
+
 
 /* -------------------------响应投递相关----------------------- */
 // 已生成但尚未成功投递给TestTask的通讯结果
@@ -132,6 +134,11 @@ static void communicate_process_received_frames(uint8_t *command_buffer, uint16_
             communicate_prepare_response(&pending_request, write_success ? FPGA_RESPONSE_SUCCESS : FPGA_RESPONSE_FAIL);
             awaiting_fpga_write_response = false;
         }
+        else if (awaiting_fpga_write_response && fpga_comm_parse_outcome_response(command_buffer, command_length))
+        {
+            communicate_prepare_response(&pending_request, FPGA_RESPONSE_TEST_OUTCOME);
+            awaiting_test_outcome_response = false;
+        }
         else
         {
             // 非当前写事务的响应帧，按FPGA主动上报或读取响应进行解析
@@ -161,10 +168,10 @@ static void communicate_process_request_queue(void)
                  * 读取请求用于周期轮询，不占用pending_request，也不向业务层回传发送结果。
                  * UART发送失败时放弃本次轮询，后续轮询仍可继续执行。
                  */
-                (void) fpga_comm_send_read_command(&request.request_data.read_instruction);
+                fpga_comm_send_read_command(&request.request_data.read_instruction);
                 break;
             }
-
+            case FPGA_OPERATION_READ_OUTCOME:
             case FPGA_OPERATION_WRITE_TEST_PARAMS:
             case FPGA_OPERATION_WRITE_REGISTER:
             {
@@ -180,8 +187,11 @@ static void communicate_process_request_queue(void)
                     communicate_prepare_response(&pending_request, FPGA_RESPONSE_SEND_FAILED);
                     return;
                 }
-
-                awaiting_fpga_write_response = true;
+                if (request.operation == FPGA_OPERATION_WRITE_TEST_PARAMS || request.operation ==
+                    FPGA_OPERATION_WRITE_REGISTER)
+                    awaiting_fpga_write_response = true;
+                else if (request.operation == FPGA_OPERATION_READ_OUTCOME)
+                    awaiting_test_outcome_response = true;
                 return;
             }
 
@@ -225,7 +235,10 @@ static bool communicate_send_pending_request(void)
             // 按协议封装并发送单个16位寄存器值
             send_success = fpga_comm_send_write_register(&pending_request.request_data.write_register);
             break;
-
+        case FPGA_OPERATION_READ_OUTCOME:
+            // 发送读取测试结果记录
+            send_success = fpga_comm_send_read_command(&pending_request.request_data.read_instruction);
+            break;
         default:
             break;
     }
@@ -267,7 +280,7 @@ static void communicate_try_report_response(void)
 
 static void communicate_check_pending_timeout(void)
 {
-    if (!awaiting_fpga_write_response)
+    if (!awaiting_fpga_write_response || !awaiting_test_outcome_response)
     {
         return;
     }
@@ -294,12 +307,14 @@ static void communicate_check_pending_timeout(void)
         // UART未能启动或完成重传，通信链路已明确失败，不再等待应答
         communicate_prepare_response(&pending_request, FPGA_RESPONSE_SEND_FAILED);
         awaiting_fpga_write_response = false;
+        awaiting_test_outcome_response = false;
         return;
     }
 
     // 首次发送及四次重传均未收到应答，向TestTask报告最终超时
     communicate_prepare_response(&pending_request, FPGA_RESPONSE_TIMEOUT);
     awaiting_fpga_write_response = false;
+    awaiting_test_outcome_response = false;
 }
 
 
@@ -311,7 +326,7 @@ static TickType_t communicate_get_wait_ticks(void)
         return pdMS_TO_TICKS(FPGA_RESPONSE_REPORT_RETRY_MS);
     }
 
-    if (!awaiting_fpga_write_response)
+    if (!awaiting_fpga_write_response || !awaiting_test_outcome_response)
     {
         // 没有内部定时事务，仅等待任务通知唤醒
         return portMAX_DELAY;

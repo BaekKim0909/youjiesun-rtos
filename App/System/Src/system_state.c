@@ -8,6 +8,7 @@ DeviceState_t device_state = {
     .lid_state = 0,
     .oil_cup_state = 0,
     .pour_state = 0,
-    .oil_cup_temperature = 0
+    .oil_cup_temperature = 0,
+    .current_step_state = 0,
+    .remain_test_time = 0
 };
-uint16_t current_test_state_g = 0;

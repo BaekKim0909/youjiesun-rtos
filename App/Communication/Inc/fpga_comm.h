@@ -8,13 +8,16 @@
 #include "test_data.h"
 #define EMPTY_ELECTRODE_CAPACITANCE_REG         (0x0000U) /* 空杯电容值 参数寄存器 */
 
-#define WRITE_RESULT_REG                        (0x000CU)   /* 写入状态判断寄存器 */
+#define WRITE_RESULT_REG                        (0x000CU)   /* 写入状态判断寄存器 0:默认 | 1:成功 | 2:失败 */
 #define TEST_CONTROL_REG                        (0x0100U)   /* 测试控制寄存器 */
 #define TEMPERATURE_REG                         (0x0101U)   /* 温度寄存器 */
+#define TEST_REMAIN_TIME_REG                    (0x0103U)   /* 测试时间寄存器 */
 #define TEST_STATE_REG                          (0x0104U)   /* 测试状态寄存器 0：空闲 1：运行中 2: 当前测试步骤测试完成*/
 #define LID_STATE_REG                           (0x0105U)   /* 盖子状态寄存器地址 */
 #define OIL_POUR_STATE_REG                      (0x0106U)   /* 排油状态寄存器地址 */
 #define OIL_CUP_STATE_REG                       (0x0107U)   /* 油杯状态寄存器地址 */
+
+#define PERMITTIVITY_OUTCOME_REG                (0x0202U)   /* 介电常数 第一次填充 结果寄存器 */
 
 #define FPGA_COMM_REGISTER_SIZE                 (2U)    /* 寄存器大小为两个字节 */
 #define FPGA_COMM_REGISTER_DATA_START_INDEX     (6U)    /* 指令数据内容起始index */
@@ -25,6 +28,7 @@
 typedef enum
 {
     FPGA_OPERATION_READ_REGISTERS = 0, /* 读取寄存器 */
+    FPGA_OPERATION_READ_OUTCOME, /* 读取测试结果 */
     FPGA_OPERATION_WRITE_TEST_PARAMS, /* 写入测试参数 */
     FPGA_OPERATION_WRITE_REGISTER /* 写入单个16位寄存器 */
 } fpga_operation_enum;
@@ -38,7 +42,7 @@ typedef struct
     uint16_t register_value; /* 寄存器写入值 */
 } write_register_instruction_t;
 
-
+// 不需要回复确认指令
 #define FPGA_REQUEST_ID_NONE 0U
 /**
  * @brief 提交给CommunicateTask的FPGA通讯请求
@@ -65,6 +69,7 @@ typedef struct
 typedef enum
 {
     FPGA_RESPONSE_SUCCESS = 0, /* FPGA确认请求执行成功 */
+    FPGA_RESPONSE_TEST_OUTCOME, /* FPGA返回测试结果 */
     FPGA_RESPONSE_FAIL, /* FPGA返回写入失败 */
     FPGA_RESPONSE_SEND_FAILED, /* UART发送失败 */
     FPGA_RESPONSE_TIMEOUT, /* 等待应答超时 */
@@ -96,6 +101,17 @@ void fpga_comm_parse_command(const uint8_t *command_buf, uint16_t length);
  * @return false 该帧不是写操作结果应答
  */
 bool fpga_comm_parse_write_response(const uint8_t *command_buffer, uint16_t command_length,bool *write_accepted);
+
+
+/**
+ * @brief 判断接收帧是否为测试结果
+ *
+ * @param command_buffer 已通过底层CRC校验的完整帧
+ * @param command_length 完整帧长度
+ * @return true 该帧是写操作结果应答
+ * @return false 该帧不是写操作结果应答
+ */
+bool fpga_comm_parse_outcome_response(const uint8_t *command_buffer, uint16_t command_length);
 
 // 读取寄存器指令
 bool fpga_comm_send_read_command(const read_instruction_t *read_instruction);

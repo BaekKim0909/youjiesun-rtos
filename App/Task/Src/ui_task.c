@@ -4,6 +4,7 @@
 #include "notice_message.h"
 #include "ui_task.h"
 
+#include "dielectric_loss_test_page.h"
 #include "heat_page.h"
 #include "main.h"
 //
@@ -12,7 +13,7 @@
 extern lv_indev_t *indev_keypad;
 
 // 将UI通知原因转换为提示信息
-static notice_message_t ui_notice_reason_to_notice_message(const ui_notice_reason_enum reason);
+static notice_message_t ui_notice_reason_to_notice_message(ui_notice_reason_enum reason);
 
 // 处理其他任务发送给UITask的事件
 static void ui_process_events(void);
@@ -53,7 +54,15 @@ static void ui_process_events(void)
                                event.event_data.page_params.template,
                                event.event_data.page_params.rho_param);
                 break;
-
+            case UI_EVENT_LOAD_DIELECTRIC_LOSS_TEST_PAGE:
+                container_dispose();
+                container_mid_init();
+                lv_indev_set_group(indev_keypad, NULL);
+                load_dielectric_loss_test_page(event.event_data.page_params.standard_name,
+                                               event.event_data.page_params.template,
+                                               event.event_data.page_params.rho_param,
+                                               event.event_data.page_params.ac_voltage);
+                break;
             default:
                 break;
         }

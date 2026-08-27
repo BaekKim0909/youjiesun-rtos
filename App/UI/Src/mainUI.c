@@ -16,6 +16,8 @@ extern void load_start_test_page(void);
 extern void update_selected_measure_standard_list(void);
 
 LV_IMAGE_DECLARE(TestFocusIcon);
+LV_IMAGE_DECLARE(LightningIcon);
+LV_IMAGE_DECLARE(LightningDarkIcon);
 
 static lv_obj_t *Container = NULL;
 Setting_t user_setting_g = {0};
@@ -27,7 +29,11 @@ Page_Index current_page_index_g = START_MEASURE_PAGE;
 lv_group_t *measure_page_group = NULL;
 // 测试标准界面组
 lv_group_t *test_standard_page_group = NULL;
-
+// 闪电动画
+const lv_image_dsc_t *lightning_anim_g[2] = {
+    &LightningIcon,
+    &LightningDarkIcon
+};
 
 // 初始化组
 static void group_init(void);

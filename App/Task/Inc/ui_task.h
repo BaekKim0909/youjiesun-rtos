@@ -28,6 +28,7 @@ typedef enum
 {
     UI_EVENT_SHOW_NOTICE = 0, // 弹窗提示
     UI_EVENT_LOAD_HEAT_PAGE, // 加载加热界面
+    UI_EVENT_LOAD_DIELECTRIC_LOSS_TEST_PAGE, // 加载介损测试界面
 } ui_event_enum;
 
 typedef struct
@@ -36,6 +37,8 @@ typedef struct
     test_standard_type template;
     uint16_t fill_num;
     uint16_t rho_param;
+    uint16_t ac_voltage; //交流电压
+    uint16_t dc_voltage; // 直流电压
 } ui_page_params_t;
 
 /**

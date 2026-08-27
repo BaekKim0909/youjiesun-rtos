@@ -13,12 +13,15 @@ typedef enum
     SETTING_PAGE,
     INFO_PAGE,
     HEAT_PAGE,
+    DIELECTRIC_LOSS_TEST_PAGE,
 } Page_Index;
 
 extern Page_Index current_page_index_g;
 
 extern lv_group_t *measure_page_group;
 extern lv_group_t *test_standard_page_group;
+
+extern const lv_image_dsc_t *lightning_anim_g[2];
 
 // lvgl初始化
 void lvgl_init(void);

@@ -27,6 +27,9 @@ typedef enum
     TEST_STATE_HEATING_TEMPERATURE_ACHIEVED, // 温度达到预设值
     TEST_STATE_WAIT_FIRST_DIELECTRIC_LOSS_TEST_RESPONSE, // 等待FPGA确认第一次介损测试指令
     TEST_STATE_FIRST_DIELECTRIC_LOSS_TEST, // 第一次介损测试
+    TEST_STATE_WAIT_HALF_OUTCOME, // 等待两次填充记录中第一次填充结果
+    TEST_STATE_WAIT_ONE_FILL_OUTCOME, // 等待一次填充测试结果
+    TEST_STATE_WAIT_TWO_FILL_OUTCOME, // 等待两次填充测试结果
     TEST_STATE_WAIT_STOP_RESPONSE, // 等待FPGA确认停止指令
     TEST_STATE_COMM_FAULT, // 通信故障，无法确认设备已停止
     TEST_STATE_START_FAIL, // 测试启动失败
@@ -67,6 +70,9 @@ static bool test_submit_heating_request(void);
 // 提交第一次介损测试请求
 static bool test_submit_first_dielectric_loss_test(void);
 
+// 提交读取单次填充测试结果指令
+static bool test_submit_read_test_outcome(void);
+
 // 提交停止请求并进入相应等待或故障状态
 static void test_submit_stop_request(void);
 
@@ -78,6 +84,9 @@ static void read_oil_cup_temperature(void);
 
 // 读取fpga状态
 static void read_fpga_state(void);
+
+// 读取fpga剩余测试事件
+static void read_remain_test_time(void);
 
 bool test_request_start(const test_request_t *request)
 {
@@ -165,7 +174,9 @@ void start_test_task(void *argument)
                         {
                             test_context.test_state = TEST_STATE_PARAM_CONFIRM;
                             // 下发升温指令
-                            if (!test_submit_heating_request())
+                            bool result = test_submit_heating_request();
+                            device_state.current_step_state = 0;
+                            if (!result)
                             {
                                 test_context.test_state = TEST_STATE_COMM_FAULT;
                                 test_submit_stop_request();
@@ -181,10 +192,10 @@ void start_test_task(void *argument)
                     }
 
                     case TEST_STATE_WAIT_HEATING_RESPONSE:
-                    {
                         if (fpga_response->response_status == FPGA_RESPONSE_SUCCESS)
                         {
                             // 加热指令写入成功
+                            device_state.current_step_state = 0;
                             test_context.test_state = TEST_STATE_HEATING;
                             ui_event_t ui_event =
                             {
@@ -209,15 +220,34 @@ void start_test_task(void *argument)
                             test_submit_stop_request();
                         }
                         break;
-                    }
                     case TEST_STATE_WAIT_FIRST_DIELECTRIC_LOSS_TEST_RESPONSE:
-                    {
                         if (fpga_response->response_status == FPGA_RESPONSE_SUCCESS)
                         {
                             // 第一次介损测试指令写入成功
                             test_context.test_state = TEST_STATE_FIRST_DIELECTRIC_LOSS_TEST;
+                            ui_event_t ui_event =
+                            {
+                                .event_type = UI_EVENT_LOAD_DIELECTRIC_LOSS_TEST_PAGE,
+                                .event_data.page_params = {
+                                    .fill_num = test_context.test_request.params.fill_num,
+                                    .rho_param = test_context.test_request.params.rho_param,
+                                    .template = test_context.test_request.standard_type,
+                                    .ac_voltage = test_context.test_request.params.ac_voltage
+                                }
+                            };
+                            strncpy(ui_event.event_data.page_params.standard_name,
+                                    test_context.test_request.standard_name,
+                                    sizeof(test_context.test_request.standard_name) - 1U);
+                            ui_event.event_data.page_params.standard_name[
+                                sizeof(test_context.test_request.standard_name) - 1U] = '\0';
+
+
+                            ui_submit_request(&ui_event);
                         }
-                    }
+                        else
+                        {
+                        }
+                        break;
                     case TEST_STATE_WAIT_STOP_RESPONSE:
                     {
                         if (fpga_response->response_status == FPGA_RESPONSE_SUCCESS)
@@ -299,6 +329,32 @@ static bool test_submit_first_dielectric_loss_test(void)
     return true;
 }
 
+// 提交读取测试结果指令
+static bool test_submit_read_test_outcome(void)
+{
+    const fpga_request_t request =
+    {
+        .request_id = test_allocate_fpga_request_id(),
+        .operation = FPGA_OPERATION_READ_OUTCOME,
+        .request_data.read_instruction = {
+            .reg_num = 0x001C,
+            .start_address = PERMITTIVITY_OUTCOME_REG
+        }
+    };
+    if (!communicate_submit_request(&request))
+    {
+        return false;
+    }
+    // 只填充一次，结果
+    if (test_context.test_request.params.fill_num == 1)
+    {
+        // 等待单次填充测试结果
+        test_context.awaiting_fpga_response_id = request.request_id;
+        test_context.test_state = TEST_STATE_WAIT_ONE_FILL_OUTCOME;
+    }
+    return true;
+}
+
 static void test_submit_stop_request(void)
 {
     const fpga_request_t request = {
@@ -357,6 +413,9 @@ void fpga_communication_timer_cb(TimerHandle_t xTimer)
         case TEST_STATE_HEATING_TEMPERATURE_ACHIEVED:
             read_fpga_state();
             break;
+        case TEST_STATE_FIRST_DIELECTRIC_LOSS_TEST:
+            read_remain_test_time();
+            break;
         default:
             break;
     }
@@ -385,7 +444,7 @@ static void read_oil_cup_temperature(void)
 
 static void read_fpga_state(void)
 {
-    if (current_test_state_g != 0x0002)
+    if (device_state.current_step_state != 0x0002)
     {
         const read_instruction_t read_instruction = {
             .start_address = TEST_STATE_REG,
@@ -400,6 +459,7 @@ static void read_fpga_state(void)
     }
     else
     {
+        // 当前测试步骤测试完成
         switch (test_context.test_state)
         {
             case TEST_STATE_HEATING_TEMPERATURE_ACHIEVED:
@@ -409,13 +469,45 @@ static void read_fpga_state(void)
                     if (test_context.current_fill_round == 1)
                     {
                         bool result = test_submit_first_dielectric_loss_test();
+                        device_state.current_step_state = 0;
+                        device_state.remain_test_time = 30; // 测试时间初始化为30
                     }
                     else if (test_context.current_fill_round == 2)
                     {
                     }
                 }
+                break;
+            case TEST_STATE_FIRST_DIELECTRIC_LOSS_TEST:
+                // 不测体积电阻率
+                if (test_context.test_request.params.rho_param == 0)
+                {
+                    // 读取测试结果
+                    test_submit_read_test_outcome();
+                }
             default:
                 break;
         }
+    }
+}
+
+// 读取fpga剩余测试事件
+static void read_remain_test_time(void)
+{
+    if (device_state.remain_test_time != 0)
+    {
+        const read_instruction_t read_instruction = {
+            .start_address = TEST_REMAIN_TIME_REG,
+            .reg_num = 0x0001
+        };
+        const fpga_request_t request = {
+            .request_id = FPGA_REQUEST_ID_NONE,
+            .operation = FPGA_OPERATION_READ_REGISTERS,
+            .request_data.read_instruction = read_instruction
+        };
+        communicate_submit_request(&request);
+    }
+    else
+    {
+        read_fpga_state();
     }
 }

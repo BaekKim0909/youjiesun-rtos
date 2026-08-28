@@ -345,12 +345,23 @@ static bool test_submit_read_test_outcome(void)
     {
         return false;
     }
+    test_context.awaiting_fpga_response_id = request.request_id;
     // 只填充一次，结果
     if (test_context.test_request.params.fill_num == 1)
     {
         // 等待单次填充测试结果
-        test_context.awaiting_fpga_response_id = request.request_id;
         test_context.test_state = TEST_STATE_WAIT_ONE_FILL_OUTCOME;
+    }
+    else if (test_context.test_request.params.fill_num == 2)
+    {
+        if (test_context.current_fill_round == 1)
+        {
+            test_context.test_state = TEST_STATE_WAIT_HALF_OUTCOME;
+        }
+        else if (test_context.current_fill_round == 2)
+        {
+            test_context.test_state = TEST_STATE_WAIT_TWO_FILL_OUTCOME;
+        }
     }
     return true;
 }
@@ -468,6 +479,7 @@ static void read_fpga_state(void)
                 {
                     if (test_context.current_fill_round == 1)
                     {
+                        // 发送开启第一次介损测量请求
                         bool result = test_submit_first_dielectric_loss_test();
                         device_state.current_step_state = 0;
                         device_state.remain_test_time = 30; // 测试时间初始化为30

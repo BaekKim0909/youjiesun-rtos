@@ -153,7 +153,8 @@ static void communicate_process_request_queue(void)
 
 
     // 写事务尚未结束或其结果尚未交付时，不启动下一项事务，避免请求与响应错配
-    if (awaiting_fpga_write_response == true || response_report_pending == true)
+    if (awaiting_fpga_write_response == true || awaiting_test_outcome_response == true || response_report_pending ==
+        true)
     {
         return;
     }

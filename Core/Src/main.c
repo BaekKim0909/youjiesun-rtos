@@ -21,8 +21,10 @@
 #include "cmsis_os.h"
 #include "dma.h"
 #include "dma2d.h"
+#include "fatfs.h"
 #include "ltdc.h"
 #include "rtc.h"
+#include "sdio.h"
 #include "spi.h"
 #include "tim.h"
 #include "usart.h"
@@ -103,6 +105,8 @@ int main(void)
   MX_DMA2D_Init();
   MX_LTDC_Init();
   MX_RTC_Init();
+  MX_SDIO_SD_Init();
+  MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
   /* USER CODE END 2 */

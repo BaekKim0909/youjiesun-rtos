@@ -73,6 +73,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
         App/Task/Src/KeyScanTask.c
         App/Task/Src/test_task.c
         App/Task/Src/ui_task.c
+        App/Task/Src/fatfs_task.c
         App/Communication/Src/fpga_comm.c
         App/System/Src/system_state.c
         App/System/Src/test_standard.c

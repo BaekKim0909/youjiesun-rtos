@@ -30,6 +30,7 @@ const char *const tags[] =
     "progress_2/2",
     "heat",
     "dielectric_loss",
+    "sd_card_mounted_failed",
     NULL
 };
 const char *const translations[] = {
@@ -55,4 +56,5 @@ const char *const translations[] = {
     "测试进度: 2/2", "STEP: 2/2",
     "加热", "Heating",
     "介损测量", "Dielectric Loss Test",
+    "SD_Card_Mounted_Failed", "SD_Card_Mounted_Failed",
 };

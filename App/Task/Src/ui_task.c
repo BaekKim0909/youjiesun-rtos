@@ -92,6 +92,12 @@ static notice_message_t ui_notice_reason_to_notice_message(const ui_notice_reaso
             notice_message.result_type = NOTICE_WARNING;
             return notice_message;
         }
+        case UI_NOTICE_IMAGE_LACK:
+        {
+            notice_message.message = lv_translation_get("image_lack");
+            notice_message.result_type = NOTICE_WARNING;
+            return notice_message;
+        }
         default:
         {
             notice_message.message = "UNKNOWN_ERROR";

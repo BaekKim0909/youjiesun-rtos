@@ -23,8 +23,8 @@
 /* USER CODE BEGIN 0 */
 extern DMA2D_HandleTypeDef hdma2d;
 
-__attribute__((section(".sdram")))
-  uint16_t ltdc_lcd_framebuf[800][480];
+__attribute__((section(".ltdc_framebuffer"),aligned(4)))
+uint16_t ltdc_lcd_framebuf[480][800];
 /* USER CODE END 0 */
 
 LTDC_HandleTypeDef hltdc;
@@ -82,8 +82,8 @@ void MX_LTDC_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN LTDC_Init 2 */
-	HAL_LTDC_SetWindowPosition(&hltdc, 0, 0, 0);
-	HAL_LTDC_SetWindowSize(&hltdc, 800, 480, 0);
+    HAL_LTDC_SetWindowPosition(&hltdc, 0, 0, 0);
+    HAL_LTDC_SetWindowSize(&hltdc, 800, 480, 0);
   /* USER CODE END LTDC_Init 2 */
 
 }
@@ -229,31 +229,29 @@ void HAL_LTDC_MspDeInit(LTDC_HandleTypeDef* ltdcHandle)
 /* USER CODE BEGIN 1 */
 void ltdc_color_fill(uint16_t sx, uint16_t sy, uint16_t ex, uint16_t ey, uint16_t *color)
 {
-  uint32_t psx, psy, pex, pey;
-  uint16_t offline;
-  uint32_t addr;
+    uint32_t psx, psy, pex, pey;
+    uint16_t offline;
+    uint32_t addr;
 
-  psx = sx;
-  psy = sy;
-  pex = ex;
-  pey = ey;
+    psx = sx;
+    psy = sy;
+    pex = ex;
+    pey = ey;
 
-  offline = 800 - (pex - psx + 1);
-  addr = ((uint32_t)ltdc_lcd_framebuf + 2 * (800 * psy + psx));
+    offline = 800 - (pex - psx + 1);
+    addr = ((uint32_t) ltdc_lcd_framebuf + 2 * (800 * psy + psx));
 
-  hdma2d.Instance->OOR = offline;
-  if (HAL_DMA2D_Start_IT(&hdma2d,
-                     (uint32_t)color,
-                     addr,
-                     (pex - psx + 1),
-                     (pey - psy + 1)) != HAL_OK)
-  {
-    /* code */
-    /* DMA2D 启动失败时，避免 flush_wait_cb 死等 */
-  	osSemaphoreRelease(ScreenFlushSemaphoreHandle);
-  }
-
-
+    hdma2d.Instance->OOR = offline;
+    if (HAL_DMA2D_Start_IT(&hdma2d,
+                           (uint32_t) color,
+                           addr,
+                           (pex - psx + 1),
+                           (pey - psy + 1)) != HAL_OK)
+    {
+        /* code */
+        /* DMA2D 启动失败时，避免 flush_wait_cb 死等 */
+        osSemaphoreRelease(ScreenFlushSemaphoreHandle);
+    }
 }
 
 /* USER CODE END 1 */

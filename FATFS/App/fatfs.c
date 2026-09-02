@@ -18,10 +18,10 @@
 /* USER CODE END Header */
 #include "fatfs.h"
 
-uint8_t retSD; /* Return value for SD */
-char SDPath[4]; /* SD logical drive path */
-FATFS SDFatFS; /* File system object for SD logical drive */
-FIL SDFile; /* File object for SD */
+uint8_t retSD;    /* Return value for SD */
+char SDPath[4];   /* SD logical drive path */
+FATFS SDFatFS;    /* File system object for SD logical drive */
+FIL SDFile;       /* File object for SD */
 
 /* USER CODE BEGIN Variables */
 extern RTC_HandleTypeDef hrtc;
@@ -30,12 +30,12 @@ extern RTC_HandleTypeDef hrtc;
 
 void MX_FATFS_Init(void)
 {
-    /*## FatFS: Link the SD driver ###########################*/
-    retSD = FATFS_LinkDriver(&SD_Driver, SDPath);
+  /*## FatFS: Link the SD driver ###########################*/
+  retSD = FATFS_LinkDriver(&SD_Driver, SDPath);
 
-    /* USER CODE BEGIN Init */
+  /* USER CODE BEGIN Init */
     /* additional user code for init */
-    /* USER CODE END Init */
+  /* USER CODE END Init */
 }
 
 /**
@@ -45,7 +45,7 @@ void MX_FATFS_Init(void)
   */
 DWORD get_fattime(void)
 {
-    /* USER CODE BEGIN get_fattime */
+  /* USER CODE BEGIN get_fattime */
     RTC_TimeTypeDef sTime;
     RTC_DateTypeDef sData;
     HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
@@ -62,7 +62,7 @@ DWORD get_fattime(void)
     DWORD fatTime = ((DWORD) data << 16) | time;
 
     return fatTime;
-    /* USER CODE END get_fattime */
+  /* USER CODE END get_fattime */
 }
 
 /* USER CODE BEGIN Application */

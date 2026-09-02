@@ -88,21 +88,21 @@ QueueHandle_t ui_event_queue = NULL;
 /* Definitions for UITask */
 osThreadId_t UITaskHandle;
 const osThreadAttr_t UITask_attributes = {
-    .name = "UITask",
-    .stack_size = 2048 * 4,
-    .priority = (osPriority_t) osPriorityNormal,
+  .name = "UITask",
+  .stack_size = 2048 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for KeyScanTask */
 osThreadId_t KeyScanTaskHandle;
 const osThreadAttr_t KeyScanTask_attributes = {
-    .name = "KeyScanTask",
-    .stack_size = 128 * 4,
-    .priority = (osPriority_t) osPriorityNormal1,
+  .name = "KeyScanTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal1,
 };
 /* Definitions for ScreenFlushSemaphore */
 osSemaphoreId_t ScreenFlushSemaphoreHandle;
 const osSemaphoreAttr_t ScreenFlushSemaphore_attributes = {
-    .name = "ScreenFlushSemaphore"
+  .name = "ScreenFlushSemaphore"
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -118,20 +118,15 @@ void start_fatfs_task(void *argument);
 /* USER CODE END FunctionPrototypes */
 
 void StartUITask(void *argument);
-
 void StartKeyScanTask(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
 /* Hook prototypes */
 void configureTimerForRunTimeStats(void);
-
 unsigned long getRunTimeCounterValue(void);
-
 void vApplicationTickHook(void);
-
 void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName);
-
 void vApplicationMallocFailedHook(void);
 
 /* USER CODE BEGIN 1 */
@@ -191,21 +186,20 @@ void vApplicationMallocFailedHook(void)
   * @param  None
   * @retval None
   */
-void MX_FREERTOS_Init(void)
-{
-    /* USER CODE BEGIN Init */
+void MX_FREERTOS_Init(void) {
+  /* USER CODE BEGIN Init */
 
-    /* USER CODE END Init */
+  /* USER CODE END Init */
 
-    /* USER CODE BEGIN RTOS_MUTEX */
+  /* USER CODE BEGIN RTOS_MUTEX */
     /* add mutexes, ... */
-    /* USER CODE END RTOS_MUTEX */
+  /* USER CODE END RTOS_MUTEX */
 
-    /* Create the semaphores(s) */
-    /* creation of ScreenFlushSemaphore */
-    ScreenFlushSemaphoreHandle = osSemaphoreNew(1, 0, &ScreenFlushSemaphore_attributes);
+  /* Create the semaphores(s) */
+  /* creation of ScreenFlushSemaphore */
+  ScreenFlushSemaphoreHandle = osSemaphoreNew(1, 0, &ScreenFlushSemaphore_attributes);
 
-    /* USER CODE BEGIN RTOS_SEMAPHORES */
+  /* USER CODE BEGIN RTOS_SEMAPHORES */
     /* add semaphores, ... */
     spi5_tx_semaphore = xSemaphoreCreateBinary();
     if (spi5_tx_semaphore != NULL)
@@ -214,15 +208,15 @@ void MX_FREERTOS_Init(void)
     }
     spi5_rx_semaphore = xSemaphoreCreateBinary();
     spi5_tx_rx_semaphore = xSemaphoreCreateBinary();
-    /* USER CODE END RTOS_SEMAPHORES */
+  /* USER CODE END RTOS_SEMAPHORES */
 
-    /* USER CODE BEGIN RTOS_TIMERS */
+  /* USER CODE BEGIN RTOS_TIMERS */
     /* start timers, add new ones, ... */
     fpga_communication_timer = xTimerCreate("fpga_communication_timer", pdMS_TO_TICKS(1000U),pdTRUE, NULL,
                                             fpga_communication_timer_cb);
-    /* USER CODE END RTOS_TIMERS */
+  /* USER CODE END RTOS_TIMERS */
 
-    /* USER CODE BEGIN RTOS_QUEUES */
+  /* USER CODE BEGIN RTOS_QUEUES */
     /* add queues, ... */
     test_event_queue = xQueueCreate(TEST_EVENT_QUEUE_LENGTH, sizeof(test_event_t));
     if (test_event_queue != NULL)
@@ -239,26 +233,27 @@ void MX_FREERTOS_Init(void)
     {
         vQueueAddToRegistry(ui_event_queue, "UI_EVENT_QUEUE");
     }
-    /* USER CODE END RTOS_QUEUES */
+  /* USER CODE END RTOS_QUEUES */
 
-    /* Create the thread(s) */
-    /* creation of UITask */
-    UITaskHandle = osThreadNew(StartUITask, NULL, &UITask_attributes);
+  /* Create the thread(s) */
+  /* creation of UITask */
+  UITaskHandle = osThreadNew(StartUITask, NULL, &UITask_attributes);
 
-    /* creation of KeyScanTask */
-    KeyScanTaskHandle = osThreadNew(StartKeyScanTask, NULL, &KeyScanTask_attributes);
+  /* creation of KeyScanTask */
+  KeyScanTaskHandle = osThreadNew(StartKeyScanTask, NULL, &KeyScanTask_attributes);
 
-    /* USER CODE BEGIN RTOS_THREADS */
+  /* USER CODE BEGIN RTOS_THREADS */
     /* add threads, ... */
     xTaskCreate(start_communicate_task, "CommunicateTask",COMMUNICATE_TASK_STACK_SIZE, NULL, COMMUNICATE_TASK_PRIORITY,
                 &communicate_taskHandle);
     xTaskCreate(start_test_task, "TestTask", TEST_TASK_STACK_SIZE, NULL, TEST_TASK_PRIORITY, &test_taskHandle);
     xTaskCreate(start_fatfs_task, "FATFS_Task", FATFS_TASK_STACK_SIZE, NULL, FATFS_TASK_PRIORITY, &fatfs_taskHandle);
-    /* USER CODE END RTOS_THREADS */
+  /* USER CODE END RTOS_THREADS */
 
-    /* USER CODE BEGIN RTOS_EVENTS */
+  /* USER CODE BEGIN RTOS_EVENTS */
     /* add events, ... */
-    /* USER CODE END RTOS_EVENTS */
+  /* USER CODE END RTOS_EVENTS */
+
 }
 
 /* USER CODE BEGIN Header_StartUITask */
@@ -270,13 +265,13 @@ void MX_FREERTOS_Init(void)
 /* USER CODE END Header_StartUITask */
 __weak void StartUITask(void *argument)
 {
-    /* USER CODE BEGIN StartUITask */
+  /* USER CODE BEGIN StartUITask */
     /* Infinite loop */
     for (;;)
     {
         osDelay(1);
     }
-    /* USER CODE END StartUITask */
+  /* USER CODE END StartUITask */
 }
 
 /* USER CODE BEGIN Header_StartKeyScanTask */
@@ -288,13 +283,13 @@ __weak void StartUITask(void *argument)
 /* USER CODE END Header_StartKeyScanTask */
 __weak void StartKeyScanTask(void *argument)
 {
-    /* USER CODE BEGIN StartKeyScanTask */
+  /* USER CODE BEGIN StartKeyScanTask */
     /* Infinite loop */
     for (;;)
     {
         osDelay(1);
     }
-    /* USER CODE END StartKeyScanTask */
+  /* USER CODE END StartKeyScanTask */
 }
 
 /* Private application code --------------------------------------------------*/
@@ -328,3 +323,4 @@ __weak void start_fatfs_task(void *argument)
 }
 
 /* USER CODE END Application */
+

@@ -241,6 +241,14 @@ SECTIONS
       PROVIDE( __bss_end = .);
   } >RAM
 
+  /* LTDC 帧缓冲区，固定从 SDRAM 首地址开始 */
+  .ltdc_framebuffer 0xC0000000 (NOLOAD) :
+  {
+      . = ALIGN(4);
+      KEEP(*(.ltdc_framebuffer))
+      . = ALIGN(4);
+  } >SDRAM
+
   .sdram (NOLOAD) :
   {
   	. = ALIGN(4);

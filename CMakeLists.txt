@@ -57,6 +57,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
         App/UI/Source/Font/chinese_character_20.c
         App/UI/Source/Font/chinese_character_24.c
         App/UI/Source/Font/chinese_character_72.c
+        App/UI/Src/image.c
         App/UI/Src/mainUI.c
         App/UI/Src/header.c
         App/UI/Src/footer.c

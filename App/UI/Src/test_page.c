@@ -11,10 +11,11 @@
 #include "system_state.h"
 #include "test_data.h"
 #include "test_task.h"
-LV_IMAGE_DECLARE(MeasureStandardIcon);
-LV_IMAGE_DECLARE(ElectrodeIcon);
-LV_IMAGE_DECLARE(SampleIcon);
-LV_IMAGE_DECLARE(ResistanceIcon);
+#include "image.h"
+LV_IMAGE_DECLARE(measure_standard_image);
+LV_IMAGE_DECLARE(electrode_image);
+LV_IMAGE_DECLARE(sample_image);
+LV_IMAGE_DECLARE(resistance_image);
 
 LV_FONT_DECLARE(lv_font_montserrat_16);
 LV_FONT_DECLARE(chinese_character_20);
@@ -34,25 +35,25 @@ void load_start_test_page(void)
 
     lv_obj_t *container = container_get();
 
-    lv_obj_t *MeasureStandardImg = lv_image_create(container);
-    lv_obj_set_size(MeasureStandardImg, 72, 72);
-    lv_obj_set_pos(MeasureStandardImg, 99, 50);
-    lv_image_set_src(MeasureStandardImg, &MeasureStandardIcon);
+    lv_obj_t *measure_standard_img = lv_image_create(container);
+    lv_obj_set_size(measure_standard_img, 72, 72);
+    lv_obj_set_pos(measure_standard_img, 99, 50);
+    lv_image_set_src(measure_standard_img, &measure_standard_image);
 
-    lv_obj_t *ElectrodeImg = lv_image_create(container);
-    lv_obj_set_size(ElectrodeImg, 72, 72);
-    lv_obj_align_to(ElectrodeImg, MeasureStandardImg, LV_ALIGN_OUT_RIGHT_MID, 131, 0);
-    lv_image_set_src(ElectrodeImg, &ElectrodeIcon);
+    lv_obj_t *electrode_img = lv_image_create(container);
+    lv_obj_set_size(electrode_img, 72, 72);
+    lv_obj_align_to(electrode_img, measure_standard_img, LV_ALIGN_OUT_RIGHT_MID, 131, 0);
+    lv_image_set_src(electrode_img, &electrode_image);
 
     lv_obj_t *SampleImg = lv_image_create(container);
     lv_obj_set_size(SampleImg, 72, 72);
-    lv_obj_align_to(SampleImg, ElectrodeImg, LV_ALIGN_OUT_RIGHT_MID, 102, 0);
-    lv_image_set_src(SampleImg, &SampleIcon);
+    lv_obj_align_to(SampleImg, electrode_img, LV_ALIGN_OUT_RIGHT_MID, 102, 0);
+    lv_image_set_src(SampleImg, &sample_image);
 
     lv_obj_t *ResistanceImg = lv_image_create(container);
     lv_obj_set_size(ResistanceImg, 72, 72);
     lv_obj_align_to(ResistanceImg, SampleImg, LV_ALIGN_OUT_RIGHT_MID, 111, 0);
-    lv_image_set_src(ResistanceImg, &ResistanceIcon);
+    lv_image_set_src(ResistanceImg, &resistance_image);
 
     lv_obj_t *label1 = lv_label_create(container);
     lv_obj_t *label2 = lv_label_create(container);
@@ -70,11 +71,11 @@ void load_start_test_page(void)
 
     lv_obj_set_style_text_color(label1, lv_color_hex(0xF8F9FF), LV_STATE_DEFAULT);
     lv_obj_set_style_text_align(label1, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-    lv_obj_align_to(label1, MeasureStandardImg, LV_ALIGN_OUT_BOTTOM_MID, 0, 10);
+    lv_obj_align_to(label1, measure_standard_img, LV_ALIGN_OUT_BOTTOM_MID, 0, 10);
 
     lv_obj_set_style_text_color(label2, lv_color_hex(0xF8F9FF), LV_STATE_DEFAULT);
     lv_obj_set_style_text_align(label2, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
-    lv_obj_align_to(label2, ElectrodeImg, LV_ALIGN_OUT_BOTTOM_MID, 0, 10);
+    lv_obj_align_to(label2, electrode_img, LV_ALIGN_OUT_BOTTOM_MID, 0, 10);
 
     lv_obj_set_style_text_color(label3, lv_color_hex(0xF8F9FF), LV_STATE_DEFAULT);
     lv_obj_set_style_text_align(label3, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);

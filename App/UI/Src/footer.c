@@ -7,18 +7,19 @@
 #include "core/lv_group_private.h"
 #include "mainUI.h"
 
-LV_IMAGE_DECLARE(TestIcon);
-LV_IMAGE_DECLARE(TestFocusIcon);
-LV_IMAGE_DECLARE(DataRecordIcon);
-LV_IMAGE_DECLARE(DataRecordFocusIcon);
-LV_IMAGE_DECLARE(TestStandardIcon);
-LV_IMAGE_DECLARE(TestStandardFocusIcon);
-LV_IMAGE_DECLARE(CalibrationIcon);
-LV_IMAGE_DECLARE(CalibrationFocusIcon);
-LV_IMAGE_DECLARE(InfoIcon);
-LV_IMAGE_DECLARE(InfoFocusIcon);
-LV_IMAGE_DECLARE(SettingIcon);
-LV_IMAGE_DECLARE(SettingFocusIcon);
+LV_IMAGE_DECLARE(test_nav_normal_image);
+LV_IMAGE_DECLARE(test_nav_focused_image);
+LV_IMAGE_DECLARE(data_record_nav_normal_image);
+LV_IMAGE_DECLARE(data_record_nav_focused_image);
+LV_IMAGE_DECLARE(test_standard_nav_normal_image);
+LV_IMAGE_DECLARE(test_standard_nav_focused_image);
+LV_IMAGE_DECLARE(electrode_nav_normal_image);
+LV_IMAGE_DECLARE(electrode_nav_focused_image);
+LV_IMAGE_DECLARE(setting_nav_normal_image);
+LV_IMAGE_DECLARE(setting_nav_focused_image);
+LV_IMAGE_DECLARE(info_nav_normal_image);
+LV_IMAGE_DECLARE(info_nav_focused_image);
+
 
 static lv_obj_t *footer = NULL;
 lv_group_t *navigation_group = NULL;
@@ -125,12 +126,12 @@ void footer_load()
     lv_obj_set_style_bg_color(setting_page_btn, lv_color_hex(0x0E2A4D), LV_PART_MAIN);
     lv_obj_set_style_bg_color(info_page_btn, lv_color_hex(0x0E2A4D), LV_PART_MAIN);
 
-    lv_image_set_src(home_btn_img, &TestIcon);
-    lv_image_set_src(dataRecord_btn_img, &DataRecordIcon);
-    lv_image_set_src(testStandard_btn_img, &TestStandardIcon);
-    lv_image_set_src(electrode_btn_img, &CalibrationIcon);
-    lv_image_set_src(setting_btn_img, &SettingIcon);
-    lv_image_set_src(info_btn_img, &InfoIcon);
+    lv_image_set_src(home_btn_img, &test_nav_normal_image);
+    lv_image_set_src(dataRecord_btn_img, &data_record_nav_normal_image);
+    lv_image_set_src(testStandard_btn_img, &test_standard_nav_normal_image);
+    lv_image_set_src(electrode_btn_img, &electrode_nav_normal_image);
+    lv_image_set_src(setting_btn_img, &setting_nav_normal_image);
+    lv_image_set_src(info_btn_img, &info_nav_normal_image);
 
     lv_obj_center(home_btn_img);
     lv_obj_center(dataRecord_btn_img);
@@ -280,22 +281,22 @@ static void navigation_bar_set_normal(void)
     lv_obj_t *setting_btn_img = lv_obj_get_child_by_type(setting_page_btn, 0, &lv_image_class);
     lv_obj_t *info_btn_img = lv_obj_get_child_by_type(info_page_btn, 0, &lv_image_class);
 
-    lv_image_set_src(home_btn_img, &TestIcon);
+    lv_image_set_src(home_btn_img, &test_nav_normal_image);
     lv_obj_set_style_border_color(home_page_btn, lv_color_hex(0x7AA5DB), LV_PART_MAIN);
 
-    lv_image_set_src(dataRecord_btn_img, &DataRecordIcon);
+    lv_image_set_src(dataRecord_btn_img, &data_record_nav_normal_image);
     lv_obj_set_style_border_color(data_record_page_btn, lv_color_hex(0x7AA5DB), LV_PART_MAIN);
 
-    lv_image_set_src(testStandard_btn_img, &TestStandardIcon);
+    lv_image_set_src(testStandard_btn_img, &test_standard_nav_normal_image);
     lv_obj_set_style_border_color(test_standard_page_btn, lv_color_hex(0x7AA5DB), LV_PART_MAIN);
 
-    lv_image_set_src(electrode_btn_img, &CalibrationIcon);
+    lv_image_set_src(electrode_btn_img, &electrode_nav_normal_image);
     lv_obj_set_style_border_color(electrode_page_btn, lv_color_hex(0x7AA5DB), LV_PART_MAIN);
 
-    lv_image_set_src(setting_btn_img, &SettingIcon);
+    lv_image_set_src(setting_btn_img, &setting_nav_normal_image);
     lv_obj_set_style_border_color(setting_page_btn, lv_color_hex(0x7AA5DB), LV_PART_MAIN);
 
-    lv_image_set_src(info_btn_img, &InfoIcon);
+    lv_image_set_src(info_btn_img, &info_nav_normal_image);
     lv_obj_set_style_border_color(info_page_btn, lv_color_hex(0x7AA5DB), LV_PART_MAIN);
 }
 
@@ -309,7 +310,7 @@ static void navigation_bar_button_clicked(lv_event_t *e)
     {
         lv_obj_set_style_border_color(btn, lv_color_hex(0xFFD83B), LV_PART_MAIN);
         lv_obj_set_style_bg_color(btn, lv_color_hex(0x0E2A4D), LV_PART_MAIN);
-        lv_image_set_src(img, &TestFocusIcon);
+        lv_image_set_src(img, &test_nav_focused_image);
 
         lv_indev_set_group(indev_keypad, measure_page_group);
         lv_group_focus_obj(lv_group_get_obj_by_index(measure_page_group, 0));
@@ -318,13 +319,13 @@ static void navigation_bar_button_clicked(lv_event_t *e)
     {
         lv_obj_set_style_border_color(btn, lv_color_hex(0xFFD83B), LV_PART_MAIN);
         lv_obj_set_style_bg_color(btn, lv_color_hex(0x0E2A4D), LV_PART_MAIN);
-        lv_image_set_src(img, &DataRecordFocusIcon);
+        lv_image_set_src(img, &data_record_nav_focused_image);
     }
     else if (flag == TEST_STANDARD_PAGE)
     {
         lv_obj_set_style_border_color(btn, lv_color_hex(0xFFD83B), LV_PART_MAIN);
         lv_obj_set_style_bg_color(btn, lv_color_hex(0x0E2A4D), LV_PART_MAIN);
-        lv_image_set_src(img, &TestStandardFocusIcon);
+        lv_image_set_src(img, &test_standard_nav_focused_image);
 
         lv_indev_set_group(indev_keypad, test_standard_page_group);
         lv_group_focus_obj(lv_group_get_obj_by_index(test_standard_page_group, 0));
@@ -333,18 +334,18 @@ static void navigation_bar_button_clicked(lv_event_t *e)
     {
         lv_obj_set_style_border_color(btn, lv_color_hex(0xFFD83B), LV_PART_MAIN);
         lv_obj_set_style_bg_color(btn, lv_color_hex(0x0E2A4D), LV_PART_MAIN);
-        lv_image_set_src(img, &CalibrationFocusIcon);
+        lv_image_set_src(img, &electrode_nav_focused_image);
     }
     else if (flag == SETTING_PAGE)
     {
         lv_obj_set_style_border_color(btn, lv_color_hex(0xFFD83B), LV_PART_MAIN);
         lv_obj_set_style_bg_color(btn, lv_color_hex(0x0E2A4D), LV_PART_MAIN);
-        lv_image_set_src(img, &SettingFocusIcon);
+        lv_image_set_src(img, &setting_nav_focused_image);
     }
     else if (flag == INFO_PAGE)
     {
         lv_obj_set_style_border_color(btn, lv_color_hex(0xFFD83B), LV_PART_MAIN);
         lv_obj_set_style_bg_color(btn, lv_color_hex(0x0E2A4D), LV_PART_MAIN);
-        lv_image_set_src(img, &InfoFocusIcon);
+        lv_image_set_src(img, &info_nav_focused_image);
     }
 }

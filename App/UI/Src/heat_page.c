@@ -8,7 +8,7 @@
 LV_FONT_DECLARE(chinese_character_20)
 LV_FONT_DECLARE(chinese_character_24)
 LV_FONT_DECLARE(chinese_character_72)
-LV_IMAGE_DECLARE(FireIcon);
+LV_IMAGE_DECLARE(heat_image);
 
 void load_heat_page(const char *standard_name, const test_standard_type standard_type, const uint16_t rho_param)
 {
@@ -130,7 +130,7 @@ void load_heat_page(const char *standard_name, const test_standard_type standard
 
     lv_obj_t *HeatImg = lv_image_create(container);
     lv_obj_set_size(HeatImg, 80, 80);
-    lv_image_set_src(HeatImg, &FireIcon);
+    lv_image_set_src(HeatImg, &heat_image);
     lv_obj_set_pos(HeatImg, 175, 225);
 
     lv_obj_t *temperature_label = lv_label_create(container);

@@ -15,9 +15,9 @@ extern void load_start_test_page(void);
 
 extern void update_selected_measure_standard_list(void);
 
-LV_IMAGE_DECLARE(TestFocusIcon);
-LV_IMAGE_DECLARE(LightningIcon);
-LV_IMAGE_DECLARE(LightningDarkIcon);
+LV_IMAGE_DECLARE(test_nav_focused_image);
+LV_IMAGE_DECLARE(lightning_light_image);
+LV_IMAGE_DECLARE(lightning_dark_image);
 
 static lv_obj_t *Container = NULL;
 Setting_t user_setting_g = {0};
@@ -31,8 +31,8 @@ lv_group_t *measure_page_group = NULL;
 lv_group_t *test_standard_page_group = NULL;
 // 闪电动画
 const lv_image_dsc_t *lightning_anim_g[2] = {
-    &LightningIcon,
-    &LightningDarkIcon
+    &lightning_light_image,
+    &lightning_dark_image
 };
 
 // 初始化组
@@ -76,7 +76,7 @@ void ui_first_load()
     lv_obj_t *img = lv_obj_get_child_by_type(home_nav_button, 0, &lv_image_class);
     lv_obj_set_style_border_color(home_nav_button, lv_color_hex(0xFFD83B), LV_PART_MAIN);
     lv_obj_set_style_bg_color(home_nav_button, lv_color_hex(0x0E2A4D), LV_PART_MAIN);
-    lv_image_set_src(img, &TestFocusIcon);
+    lv_image_set_src(img, &test_nav_focused_image);
 
 
     // 设置屏幕亮度

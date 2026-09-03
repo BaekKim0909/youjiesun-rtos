@@ -7,14 +7,15 @@
 #include "mainUI.h"
 #include "system_state.h"
 #include "system_structs.h"
-LV_IMAGE_DECLARE(LidOpen);
-LV_IMAGE_DECLARE(LidClose);
-LV_IMAGE_DECLARE(PourOilClose);
-LV_IMAGE_DECLARE(PourOilOpen);
-LV_IMAGE_DECLARE(OilCupNormal);
-LV_IMAGE_DECLARE(OilCupAbnormal);
-LV_IMAGE_DECLARE(TemperatureNormal);
-LV_IMAGE_DECLARE(TemperatureHigh);
+#include "image.h"
+LV_IMAGE_DECLARE(lid_open_image);
+LV_IMAGE_DECLARE(lid_close_image);
+LV_IMAGE_DECLARE(pour_oil_close_image);
+LV_IMAGE_DECLARE(pour_oil_open_image);
+LV_IMAGE_DECLARE(oil_cup_normal_image);
+LV_IMAGE_DECLARE(oil_cup_abnormal_image);
+LV_IMAGE_DECLARE(temperature_normal_image);
+LV_IMAGE_DECLARE(temperature_high_image);
 
 LV_FONT_DECLARE(chinese_character_20);
 
@@ -63,11 +64,11 @@ void header_load(void)
     if (device_state.lid_state == 0)
     {
         /* code */
-        lv_image_set_src(lid_state_img, &LidClose);
+        lv_image_set_src(lid_state_img, &lid_close_image);
     }
     else if (device_state.lid_state == 1)
     {
-        lv_image_set_src(lid_state_img, &LidOpen);
+        lv_image_set_src(lid_state_img, &lid_open_image);
     }
     lv_obj_align(lid_state_img, LV_ALIGN_LEFT_MID, 25, 0);
 
@@ -76,12 +77,12 @@ void header_load(void)
     lv_obj_set_size(pour_oil_img, 30, 30);
     if (device_state.pour_state == 0)
     {
-        lv_image_set_src(pour_oil_img, &PourOilClose);
+        lv_image_set_src(pour_oil_img, &pour_oil_close_image);
     }
     else if (device_state.pour_state == 1)
     {
         /* code */
-        lv_image_set_src(pour_oil_img, &PourOilOpen);
+        lv_image_set_src(pour_oil_img, &pour_oil_open_image);
     }
 
     lv_obj_align_to(pour_oil_img, lid_state_img, LV_ALIGN_OUT_RIGHT_MID, 30, 0);
@@ -92,12 +93,12 @@ void header_load(void)
     if (device_state.oil_cup_state == 0)
     {
         /* code */
-        lv_image_set_src(oil_cup_img, &OilCupNormal);
+        lv_image_set_src(oil_cup_img, &oil_cup_normal_image);
     }
     else if (device_state.oil_cup_state == 1)
     {
         /* code */
-        lv_image_set_src(oil_cup_img, &OilCupAbnormal);
+        lv_image_set_src(oil_cup_img, &oil_cup_abnormal_image);
     }
 
     lv_obj_align_to(oil_cup_img, pour_oil_img, LV_ALIGN_OUT_RIGHT_MID, 30, 0);
@@ -107,11 +108,11 @@ void header_load(void)
     lv_obj_set_name(temperatureImg, "TemperatureImg");
     if (device_state.oil_cup_temperature > 40.0f)
     {
-        lv_image_set_src(temperatureImg, &TemperatureHigh);
+        lv_image_set_src(temperatureImg, &temperature_high_image);
     }
     else
     {
-        lv_image_set_src(temperatureImg, &TemperatureNormal);
+        lv_image_set_src(temperatureImg, &temperature_normal_image);
     }
 
     lv_obj_align(temperatureImg, LV_ALIGN_CENTER, -20, 0);
@@ -194,23 +195,23 @@ static void update_device_state_cb(lv_timer_t *timer)
         if (device_state.lid_state == 0)
         {
             /* code */
-            lv_image_set_src(lid_state_img, &LidClose);
+            lv_image_set_src(lid_state_img, &lid_close_image);
         }
         else if (device_state.lid_state == 1)
         {
-            lv_image_set_src(lid_state_img, &LidOpen);
+            lv_image_set_src(lid_state_img, &lid_open_image);
         }
     }
     if (pour_oil_img != NULL)
     {
         if (device_state.pour_state == 0)
         {
-            lv_image_set_src(pour_oil_img, &PourOilClose);
+            lv_image_set_src(pour_oil_img, &pour_oil_close_image);
         }
         else if (device_state.pour_state == 1)
         {
             /* code */
-            lv_image_set_src(pour_oil_img, &PourOilOpen);
+            lv_image_set_src(pour_oil_img, &pour_oil_open_image);
         }
     }
     if (oil_cup_img != NULL)
@@ -218,12 +219,12 @@ static void update_device_state_cb(lv_timer_t *timer)
         if (device_state.oil_cup_state == 0)
         {
             /* code */
-            lv_image_set_src(oil_cup_img, &OilCupNormal);
+            lv_image_set_src(oil_cup_img, &oil_cup_normal_image);
         }
         else if (device_state.oil_cup_state == 1)
         {
             /* code */
-            lv_image_set_src(oil_cup_img, &OilCupAbnormal);
+            lv_image_set_src(oil_cup_img, &oil_cup_abnormal_image);
         }
     }
     if (temperature_label != NULL)
@@ -241,11 +242,11 @@ static void update_device_state_cb(lv_timer_t *timer)
     {
         if (device_state.oil_cup_temperature >= 40.0f)
         {
-            lv_image_set_src(temperature_img, &TemperatureHigh);
+            lv_image_set_src(temperature_img, &temperature_high_image);
         }
         else
         {
-            lv_image_set_src(temperature_img, &TemperatureNormal);
+            lv_image_set_src(temperature_img, &temperature_normal_image);
         }
     }
     if (current_page_index_g == HEAT_PAGE)

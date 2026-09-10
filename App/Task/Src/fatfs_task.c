@@ -28,10 +28,7 @@ void start_fatfs_task(void *argument)
         ui_notice_post(UI_NOTICE_SD_CARD_MOUNTED_FAILED);
     }
     load_all_img_from_SD_card();
-    for (;;)
-    {
-        vTaskDelay(1000);
-    }
+    vTaskDelete(NULL);
 }
 
 

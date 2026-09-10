@@ -15,7 +15,7 @@ typedef struct
     uint8_t *img_map;
 } image_t;
 
-#define IMAGE_LIST_COUNT 27U
+#define IMAGE_LIST_COUNT 32U
 
 extern image_t image_list[IMAGE_LIST_COUNT];
 

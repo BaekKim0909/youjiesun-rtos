@@ -6,6 +6,7 @@
 #include "style_g.h"
 #include "core/lv_group_private.h"
 #include "mainUI.h"
+#include "info_page.h"
 
 LV_IMAGE_DECLARE(test_nav_normal_image);
 LV_IMAGE_DECLARE(test_nav_focused_image);
@@ -226,6 +227,7 @@ static void navigation_bar_button_focus(lv_event_t *e)
     }
     else if (flag == INFO_PAGE)
     {
+        load_info_page();
         lv_obj_set_style_bg_color(btn, lv_color_hex(0x2D96FF), LV_PART_MAIN);
     }
 }

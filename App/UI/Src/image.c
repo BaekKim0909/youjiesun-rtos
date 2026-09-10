@@ -114,6 +114,25 @@ static uint8_t lightning_dark_image_map[IMG_SIZE_OF_80PX] = {};
 __attribute__((section(".sdram"),aligned(4)))
 static uint8_t heat_image_map[IMG_SIZE_OF_80PX] = {};
 
+/* 公司公众号二维码图片 */
+__attribute__((section(".sdram"),aligned(4)))
+static uint8_t QR_code_image_map[143 * 143 * 3] = {};
+
+/* 校准日期图标 */
+__attribute__((section(".sdram"),aligned(4)))
+static uint8_t calibration_data_image_map[IMG_SIZE_OF_30PX] = {};
+
+/* 联系电话图标 */
+__attribute__((section(".sdram"),aligned(4)))
+static uint8_t phone_number_image_map[IMG_SIZE_OF_30PX] = {};
+
+/* 序列号图标 */
+__attribute__((section(".sdram"),aligned(4)))
+static uint8_t serial_number_image_map[IMG_SIZE_OF_30PX] = {};
+
+/* 软件版本图标 */
+__attribute__((section(".sdram"),aligned(4)))
+static uint8_t software_version_image_map[IMG_SIZE_OF_30PX] = {};
 image_t image_list[IMAGE_LIST_COUNT] = {
     {
         .img_file_name = "measure_standard_icon.bin",
@@ -249,6 +268,31 @@ image_t image_list[IMAGE_LIST_COUNT] = {
         .img_file_name = "heat_icon.bin",
         .img_size = IMG_SIZE_OF_80PX,
         .img_map = heat_image_map
+    },
+    {
+        .img_file_name = "QR_code_icon.bin",
+        .img_size = 143 * 143 * 3,
+        .img_map = QR_code_image_map
+    },
+    {
+        .img_file_name = "phone_number_icon.bin",
+        .img_size = IMG_SIZE_OF_30PX,
+        .img_map = phone_number_image_map
+    },
+    {
+        .img_file_name = "calibration_data_icon.bin",
+        .img_size = IMG_SIZE_OF_30PX,
+        .img_map = calibration_data_image_map
+    },
+    {
+        .img_file_name = "serial_number_icon.bin",
+        .img_size = IMG_SIZE_OF_30PX,
+        .img_map = serial_number_image_map
+    },
+    {
+        .img_file_name = "software_version_icon.bin",
+        .img_size = IMG_SIZE_OF_30PX,
+        .img_map = software_version_image_map
     },
 };
 
@@ -518,4 +562,50 @@ const lv_image_dsc_t heat_image = {
     .header.h = 80,
     .data_size = 80 * 80 * 3,
     .data = heat_image_map,
+};
+
+/* 公司二维码图片对象 */
+const lv_image_dsc_t QR_code_image = {
+    .header.cf = LV_COLOR_FORMAT_RGB565A8,
+    .header.magic = LV_IMAGE_HEADER_MAGIC,
+    .header.w = 143,
+    .header.h = 143,
+    .data_size = 143 * 143 * 3,
+    .data = QR_code_image_map,
+};
+/* 联系电话图片对象 */
+const lv_image_dsc_t phone_number_image = {
+    .header.cf = LV_COLOR_FORMAT_RGB565A8,
+    .header.magic = LV_IMAGE_HEADER_MAGIC,
+    .header.w = 30,
+    .header.h = 30,
+    .data_size = 30 * 30 * 3,
+    .data = phone_number_image_map,
+};
+/* 校准日期图片对象 */
+const lv_image_dsc_t calibration_data_image = {
+    .header.cf = LV_COLOR_FORMAT_RGB565A8,
+    .header.magic = LV_IMAGE_HEADER_MAGIC,
+    .header.w = 30,
+    .header.h = 30,
+    .data_size = 30 * 30 * 3,
+    .data = calibration_data_image_map,
+};
+/* 序列号图片对象 */
+const lv_image_dsc_t serial_number_image = {
+    .header.cf = LV_COLOR_FORMAT_RGB565A8,
+    .header.magic = LV_IMAGE_HEADER_MAGIC,
+    .header.w = 30,
+    .header.h = 30,
+    .data_size = 30 * 30 * 3,
+    .data = serial_number_image_map,
+};
+/* 软件版本图片对象 */
+const lv_image_dsc_t software_version_image = {
+    .header.cf = LV_COLOR_FORMAT_RGB565A8,
+    .header.magic = LV_IMAGE_HEADER_MAGIC,
+    .header.w = 30,
+    .header.h = 30,
+    .data_size = 30 * 30 * 3,
+    .data = software_version_image_map,
 };

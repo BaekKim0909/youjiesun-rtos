@@ -10,7 +10,7 @@
 // 版本信息放在FLASH 30MB 地址上
 #define FLASH_ADDRESS_OF_SOFT_VERSION  (0x01E00000U)
 
-#define SOFTWARE_VERSION       V1.0
+#define SOFTWARE_VERSION       "V1.0"
 uint16_t major_version = 1;
 uint16_t minor_version = 0;
 

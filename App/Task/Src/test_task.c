@@ -27,6 +27,8 @@ typedef enum
     TEST_STATE_HEATING_TEMPERATURE_ACHIEVED, // 温度达到预设值
     TEST_STATE_WAIT_FIRST_DIELECTRIC_LOSS_TEST_RESPONSE, // 等待FPGA确认第一次介损测试指令
     TEST_STATE_FIRST_DIELECTRIC_LOSS_TEST, // 第一次介损测试
+    TEST_STATE_WAIT_SECOND_DIELECTRIC_LOSS_TEST_RESPONSE, // 等待FPGA确认第二次介损测试指令
+    TEST_STATE_SECOND_DIELECTRIC_LOSS_TEST, // 第二次介损测试
     TEST_STATE_WAIT_HALF_OUTCOME, // 等待两次填充记录中第一次填充结果
     TEST_STATE_WAIT_ONE_FILL_OUTCOME, // 等待一次填充测试结果
     TEST_STATE_WAIT_TWO_FILL_OUTCOME, // 等待两次填充测试结果
@@ -69,6 +71,9 @@ static bool test_submit_heating_request(void);
 
 // 提交第一次介损测试请求
 static bool test_submit_first_dielectric_loss_test(void);
+
+// 提交第二次介损测试请求
+static bool test_submit_second_dielectric_loss_test(void);
 
 // 提交读取单次填充测试结果指令
 static bool test_submit_read_test_outcome(void);
@@ -178,7 +183,6 @@ void start_test_task(void *argument)
                             device_state.current_step_state = 0;
                             if (!result)
                             {
-                                test_context.test_state = TEST_STATE_COMM_FAULT;
                                 test_submit_stop_request();
                             }
                         }
@@ -216,7 +220,6 @@ void start_test_task(void *argument)
                         }
                         else
                         {
-                            test_context.test_state = TEST_STATE_COMM_FAULT;
                             test_submit_stop_request();
                         }
                         break;
@@ -246,6 +249,17 @@ void start_test_task(void *argument)
                         }
                         else
                         {
+                        }
+                        break;
+                    case TEST_STATE_WAIT_ONE_FILL_OUTCOME:
+                        if (fpga_response->response_status == FPGA_RESPONSE_TEST_OUTCOME)
+                        {
+                            // 成功读取测试记录
+                            test_context.test_state = TEST_STATE_IDLE;
+                            ui_event_t ui_event = {
+                                .event_type = UI_EVENT_LOAD_ONE_FILL_OUTCOME_PAGE
+                            };
+                            ui_submit_request(&ui_event);
                         }
                         break;
                     case TEST_STATE_WAIT_STOP_RESPONSE:
@@ -326,6 +340,26 @@ static bool test_submit_first_dielectric_loss_test(void)
     }
     test_context.awaiting_fpga_response_id = request.request_id;
     test_context.test_state = TEST_STATE_WAIT_FIRST_DIELECTRIC_LOSS_TEST_RESPONSE;
+    return true;
+}
+
+static bool test_submit_second_dielectric_loss_test(void)
+{
+    const fpga_request_t request = {
+        .request_id = test_allocate_fpga_request_id(),
+        .operation = FPGA_OPERATION_WRITE_REGISTER,
+        .request_data.write_register = {
+            .register_address = TEST_CONTROL_REG,
+            .register_value = 0x0005U
+        }
+    };
+    // 队列提交失败处理
+    if (!communicate_submit_request(&request))
+    {
+        return false;
+    }
+    test_context.awaiting_fpga_response_id = request.request_id;
+    test_context.test_state = TEST_STATE_WAIT_SECOND_DIELECTRIC_LOSS_TEST_RESPONSE;
     return true;
 }
 
@@ -481,11 +515,26 @@ static void read_fpga_state(void)
                     {
                         // 发送开启第一次介损测量请求
                         bool result = test_submit_first_dielectric_loss_test();
+                        if (!result)
+                        {
+                            // todo: 提交测试请求失败
+                            return;
+                        }
                         device_state.current_step_state = 0;
                         device_state.remain_test_time = 30; // 测试时间初始化为30
                     }
+                    // 发送开启第二次介损测量请求
                     else if (test_context.current_fill_round == 2)
                     {
+                        // 发送开启第二次介损测量请求
+                        bool result = test_submit_second_dielectric_loss_test();
+                        if (!result)
+                        {
+                            // todo: 提交测试请求失败
+                            return;
+                        }
+                        device_state.current_step_state = 0;
+                        device_state.remain_test_time = 30;
                     }
                 }
                 break;

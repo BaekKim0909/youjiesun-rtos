@@ -190,9 +190,15 @@ static void communicate_process_request_queue(void)
                 }
                 if (request.operation == FPGA_OPERATION_WRITE_TEST_PARAMS || request.operation ==
                     FPGA_OPERATION_WRITE_REGISTER)
+                {
                     awaiting_fpga_write_response = true;
+                    awaiting_test_outcome_response = false;
+                }
                 else if (request.operation == FPGA_OPERATION_READ_OUTCOME)
+                {
+                    awaiting_fpga_write_response = false;
                     awaiting_test_outcome_response = true;
+                }
                 break;
             }
 

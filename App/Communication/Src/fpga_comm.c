@@ -8,7 +8,7 @@
 #include <sys/types.h>
 
 #include "system_state.h"
-
+#include "test_data.h"
 extern UART_Device fpga_device;
 
 void fpga_comm_parse_command(const uint8_t *command_buf, uint16_t length)
@@ -115,6 +115,154 @@ bool fpga_comm_parse_outcome_response(const uint8_t *command_buffer, uint16_t co
     {
         return false;
     }
+    
+    /* 解析指令 */
+    uint32_t permittivity_1_temp = 0; // 介电常数1
+    uint32_t dielectric_loss_1_temp = 0; // 介损因数1
+    uint32_t rho_pos_1_temp = 0; // 体积电阻率1+
+    uint32_t rho_neg_1_temp = 0; // 体积电阻率1-
+    uint32_t temperature_1_temp = 0; // 测试温度1
+    uint32_t ac_voltage_1_temp = 0; // 交流电压1
+    uint32_t dc_voltage_1_temp = 0; // 直流电压1
+
+    uint32_t permittivity_2_temp = 0; // 介电常数2
+    uint32_t dielectric_loss_2_temp = 0; // 介损因数2
+    uint32_t rho_pos_2_temp = 0; // 体积电阻率2+
+    uint32_t rho_neg_2_temp = 0; // 体积电阻率2-
+    uint32_t temperature_2_temp = 0; // 测试温度2
+    uint32_t ac_voltage_2_temp = 0; // 交流电压2
+    uint32_t dc_voltage_2_temp = 0; // 直流电压2
+
+    float permittivity_1_value = 0.0f;
+    float dielectric_loss_1_value = 0.0f;
+    float rho_pos_1_value = 0.0f;
+    float rho_neg_1_value = 0.0f;
+    float temperature_1_value = 0.0f;
+    float ac_voltage_1_value = 0.0f;
+    float dc_voltage_1_value = 0.0f;
+
+    float permittivity_2_value = 0.0f;
+    float dielectric_loss_2_value = 0.0f;
+    float rho_pos_2_value = 0.0f;
+    float rho_neg_2_value = 0.0f;
+    float temperature_2_value = 0.0f;
+    float ac_voltage_2_value = 0.0f;
+    float dc_voltage_2_value = 0.0f;
+    for (uint8_t i = 6; i < 10; i++)
+    {
+        /* code */
+        permittivity_1_temp <<= 8;
+        permittivity_1_temp |= (uint32_t) command_buffer[i];
+    }
+    for (uint8_t i = 10; i < 14; i++)
+    {
+        /* code */
+        dielectric_loss_1_temp <<= 8;
+        dielectric_loss_1_temp |= (uint32_t) command_buffer[i];
+    }
+    for (uint8_t i = 14; i < 18; i++)
+    {
+        /* code */
+        rho_pos_1_temp <<= 8;
+        rho_pos_1_temp |= (uint32_t) command_buffer[i];
+    }
+    for (uint8_t i = 18; i < 22; i++)
+    {
+        /* code */
+        rho_neg_1_temp <<= 8;
+        rho_neg_1_temp |= (uint32_t) command_buffer[i];
+    }
+    for (uint8_t i = 22; i < 26; i++)
+    {
+        /* code */
+        ac_voltage_1_temp <<= 8;
+        ac_voltage_1_temp |= (uint32_t) command_buffer[i];
+    }
+    for (uint8_t i = 26; i < 30; i++)
+    {
+        /* code */
+        dc_voltage_1_temp <<= 8;
+        dc_voltage_1_temp |= (uint32_t) command_buffer[i];
+    }
+    for (uint8_t i = 30; i < 34; i++)
+    {
+        /* code */
+        temperature_1_temp <<= 8;
+        temperature_1_temp |= (uint32_t) command_buffer[i];
+    }
+    for (uint8_t i = 34; i < 38; i++)
+    {
+        /* code */
+        permittivity_2_temp <<= 8;
+        permittivity_2_temp |= (uint32_t) command_buffer[i];
+    }
+    for (uint8_t i = 38; i < 42; i++)
+    {
+        /* code */
+        dielectric_loss_2_temp <<= 8;
+        dielectric_loss_2_temp |= (uint32_t) command_buffer[i];
+    }
+    for (uint8_t i = 42; i < 46; i++)
+    {
+        /* code */
+        rho_pos_2_temp <<= 8;
+        rho_pos_2_temp |= (uint32_t) command_buffer[i];
+    }
+    for (uint8_t i = 46; i < 50; i++)
+    {
+        /* code */
+        rho_neg_2_temp <<= 8;
+        rho_neg_2_temp |= (uint32_t) command_buffer[i];
+    }
+    for (uint8_t i = 50; i < 54; i++)
+    {
+        /* code */
+        ac_voltage_2_temp <<= 8;
+        ac_voltage_2_temp |= (uint32_t) command_buffer[i];
+    }
+    for (uint8_t i = 54; i < 58; i++)
+    {
+        /* code */
+        dc_voltage_2_temp <<= 8;
+        dc_voltage_2_temp |= (uint32_t) command_buffer[i];
+    }
+    for (uint8_t i = 58; i < 62; i++)
+    {
+        /* code */
+        temperature_2_temp <<= 8;
+        temperature_2_temp |= (uint32_t) command_buffer[i];
+    }
+
+    memcpy(&permittivity_1_value, &permittivity_1_temp, sizeof(float));
+    memcpy(&dielectric_loss_1_value, &dielectric_loss_1_temp, sizeof(float));
+    memcpy(&rho_pos_1_value, &rho_pos_1_temp, sizeof(float));
+    memcpy(&rho_neg_1_value, &rho_neg_1_temp, sizeof(float));
+    memcpy(&permittivity_2_value, &permittivity_2_temp, sizeof(float));
+    memcpy(&dielectric_loss_2_value, &dielectric_loss_2_temp, sizeof(float));
+    memcpy(&rho_pos_2_value, &rho_pos_2_temp, sizeof(float));
+    memcpy(&rho_neg_2_value, &rho_neg_2_temp, sizeof(float));
+    memcpy(&temperature_1_value, &temperature_1_temp, sizeof(float));
+    memcpy(&temperature_2_value, &temperature_2_temp, sizeof(float));
+    memcpy(&ac_voltage_1_value, &ac_voltage_1_temp, sizeof(float));
+    memcpy(&ac_voltage_2_value, &ac_voltage_2_temp, sizeof(float));
+    memcpy(&dc_voltage_1_value, &dc_voltage_1_temp, sizeof(float));
+    memcpy(&dc_voltage_2_value, &dc_voltage_2_temp, sizeof(float));
+
+    latest_test_record.permittivity_1 = permittivity_1_value;
+    latest_test_record.dielectric_loss_1 = dielectric_loss_1_value;
+    latest_test_record.rho_pos_1 = rho_pos_1_value;
+    latest_test_record.rho_neg_1 = rho_neg_1_value;
+    latest_test_record.ac_voltage_1 = ac_voltage_1_value;
+    latest_test_record.dc_voltage_1 = dc_voltage_1_value;
+    latest_test_record.temperature_1 = temperature_1_value;
+    latest_test_record.permittivity_2 = permittivity_2_value;
+    latest_test_record.dielectric_loss_2 = dielectric_loss_2_value;
+    latest_test_record.rho_pos_2 = rho_pos_2_value;
+    latest_test_record.rho_neg_2 = rho_neg_2_value;
+    latest_test_record.temperature_2 = temperature_2_value;
+    latest_test_record.ac_voltage_2 = ac_voltage_2_value;
+    latest_test_record.dc_voltage_2 = dc_voltage_2_value;
+
     return true;
 }
 

@@ -104,7 +104,7 @@ bool fpga_comm_parse_write_response(const uint8_t *command_buffer, uint16_t comm
 
 
 /**
- * @brief 判断接收帧是否为测试结果
+ * @brief 判断接收帧是否为测试结果,并解析
  *
  * @param command_buffer 已通过底层CRC校验的完整帧
  * @param command_length 完整帧长度

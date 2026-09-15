@@ -5,3 +5,5 @@
 electrode_t electrode_list[ELECTRODE_COUNT] = {
 
 };
+
+test_record_t latest_test_record = {};

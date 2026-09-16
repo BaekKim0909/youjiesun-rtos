@@ -32,6 +32,14 @@ const char *const tags[] =
     "dielectric_loss",
     "sd_card_mounted_failed",
     "image_lack",
+    "electrode",
+    "electrode_info",
+    "ac_param",
+    "dc_param",
+    "test_temperature",
+    "test_outcome",
+    "valid",
+    "invalid",
     NULL
 };
 const char *const translations[] = {
@@ -47,8 +55,8 @@ const char *const translations[] = {
     "排油中......", "draining oil......",
     "请检查温度探针", "Please check the temperature probe.",
     "通信异常", "Communication error",
-    "升温启动失败，测试已停止，请重试", "Heating failed to start. The test has stopped. Please try again.",
-    "停止测试失败，请检查设备", "Failed to stop the test. Please check the device.",
+    "升温启动失败,测试已停止,请重试", "Heating failed to start. The test has stopped. Please try again.",
+    "停止测试失败,请检查设备", "Failed to stop the test. Please check the device.",
     "开始测试失败!", "Start error!",
     "⚠测试中,按下任意键停止", "⚠Testing... Press any key to stop",
     "测试进度: 1/3", "STEP: 1/3",
@@ -59,4 +67,12 @@ const char *const translations[] = {
     "介损测量", "Dielectric Loss Test",
     "SD Card Mounted Failed", "SD Card Mounted Failed",
     "Lack of image resources", "Lack of image resources",
+    "电极", "Electrode",
+    "电极信息", "Electrode Info",
+    "交流参数", "AC Param",
+    "直流参数(1min)", "DC Param",
+    "测试温度", "Temperature",
+    "测试结果", "Test Outcome",
+    "有效", "Valid",
+    "无效", "Invalid"
 };

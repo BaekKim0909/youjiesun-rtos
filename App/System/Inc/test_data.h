@@ -47,6 +47,22 @@ extern electrode_t electrode_list[ELECTRODE_COUNT];
 // 测试记录结构体
 typedef struct
 {
+    uint8_t year;
+    uint8_t month;
+    uint8_t date;
+    uint8_t hour;
+    uint8_t minute;
+    uint8_t second;
+
+    char sample_name[52]; // 样品名称
+    char standard_name[24]; // 测试标准名称
+    uint8_t fill_num; // 填充次数
+    uint8_t rho_param; // 体积电阻率：0:不测试 1:Rho+ 2:Rho+和Rho-
+    uint8_t frequency; // 介损设定频率  测试频率
+    char electrode_name[2]; // 电极名称
+    float capacitance; // 空杯电容值
+    test_standard_type standard_template; // 测试标准模板
+
     float permittivity_1; // 介电常数1
     float dielectric_loss_1; // 介损值1
     float rho_pos_1; // rho+
@@ -66,4 +82,6 @@ typedef struct
 
 // 最新测试结果
 extern test_record_t latest_test_record;
+
+void init_test_record();
 #endif //YOUJIESUN_TEST_STRUCTS_H

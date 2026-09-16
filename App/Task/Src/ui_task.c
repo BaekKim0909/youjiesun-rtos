@@ -7,6 +7,7 @@
 #include "dielectric_loss_test_page.h"
 #include "heat_page.h"
 #include "main.h"
+#include "record_outcome_page.h"
 //
 // Created by 74222 on 2026/7/14.
 //
@@ -62,6 +63,12 @@ static void ui_process_events(void)
                                                event.event_data.page_params.template,
                                                event.event_data.page_params.rho_param,
                                                event.event_data.page_params.ac_voltage);
+                break;
+            case UI_EVENT_LOAD_ONE_FILL_OUTCOME_PAGE:
+                container_dispose();
+                container_mid_init();
+                lv_indev_set_group(indev_keypad, NULL);
+                load_one_fill_outcome_page(latest_test_record);
                 break;
             default:
                 break;

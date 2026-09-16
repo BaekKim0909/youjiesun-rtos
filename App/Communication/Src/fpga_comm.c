@@ -96,7 +96,7 @@ bool fpga_comm_parse_write_response(const uint8_t *command_buffer, uint16_t comm
 
 bool fpga_comm_parse_outcome_response(const uint8_t *command_buffer, uint16_t command_length)
 {
-    if (command_buffer == NULL || command_length != 36)
+    if (command_buffer == NULL || command_length != 64)
     {
         return false;
     }
@@ -115,7 +115,7 @@ bool fpga_comm_parse_outcome_response(const uint8_t *command_buffer, uint16_t co
     {
         return false;
     }
-    
+
     /* 解析指令 */
     uint32_t permittivity_1_temp = 0; // 介电常数1
     uint32_t dielectric_loss_1_temp = 0; // 介损因数1

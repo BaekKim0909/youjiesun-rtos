@@ -375,11 +375,6 @@ static bool test_submit_read_test_outcome(void)
             .start_address = PERMITTIVITY_OUTCOME_REG
         }
     };
-    if (!communicate_submit_request(&request))
-    {
-        return false;
-    }
-    test_context.awaiting_fpga_response_id = request.request_id;
     // 只填充一次，结果
     if (test_context.test_request.params.fill_num == 1)
     {
@@ -397,6 +392,12 @@ static bool test_submit_read_test_outcome(void)
             test_context.test_state = TEST_STATE_WAIT_TWO_FILL_OUTCOME;
         }
     }
+    if (!communicate_submit_request(&request))
+    {
+        return false;
+    }
+    test_context.awaiting_fpga_response_id = request.request_id;
+
     return true;
 }
 
@@ -439,7 +440,8 @@ static bool test_is_expected_fpga_response(const fpga_response_t *response)
         case TEST_STATE_WAIT_STOP_RESPONSE:
         case TEST_STATE_WAIT_FIRST_DIELECTRIC_LOSS_TEST_RESPONSE:
             return response->operation == FPGA_OPERATION_WRITE_REGISTER;
-
+        case TEST_STATE_WAIT_ONE_FILL_OUTCOME:
+            return response->operation == FPGA_OPERATION_READ_OUTCOME;
         default:
             return false;
     }

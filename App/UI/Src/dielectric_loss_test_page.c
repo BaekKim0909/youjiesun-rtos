@@ -187,5 +187,8 @@ void load_dielectric_loss_test_page(const char *standard_name, const test_standa
 static void update_remain_test_time_cb(lv_timer_t *timer)
 {
     lv_obj_t *time_label = (lv_obj_t *) lv_timer_get_user_data(timer);
-    lv_label_set_text_fmt(time_label, "%lus", device_state.remain_test_time);
+    if (current_page_index_g == DIELECTRIC_LOSS_TEST_PAGE)
+        lv_label_set_text_fmt(time_label, "%lus", device_state.remain_test_time);
+    else
+        lv_timer_delete(dielectric_loss_test_timer);
 }

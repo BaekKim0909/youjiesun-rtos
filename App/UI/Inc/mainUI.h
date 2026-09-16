@@ -14,6 +14,7 @@ typedef enum
     INFO_PAGE,
     HEAT_PAGE,
     DIELECTRIC_LOSS_TEST_PAGE,
+    OUTCOME_ONE_FILL_PAGE,
 } Page_Index;
 
 extern Page_Index current_page_index_g;

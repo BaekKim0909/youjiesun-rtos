@@ -134,7 +134,7 @@ static void communicate_process_received_frames(uint8_t *command_buffer, uint16_
             communicate_prepare_response(&pending_request, write_success ? FPGA_RESPONSE_SUCCESS : FPGA_RESPONSE_FAIL);
             awaiting_fpga_write_response = false;
         }
-        else if (awaiting_fpga_write_response && fpga_comm_parse_outcome_response(command_buffer, command_length))
+        else if (awaiting_test_outcome_response && fpga_comm_parse_outcome_response(command_buffer, command_length))
         {
             communicate_prepare_response(&pending_request, FPGA_RESPONSE_TEST_OUTCOME);
             awaiting_test_outcome_response = false;

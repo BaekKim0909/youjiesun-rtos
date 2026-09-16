@@ -150,7 +150,7 @@ void load_start_test_page(void)
 
     /* 样品ID输入框 相关控件 */
     lv_obj_t *sample_id_textArea = lv_textarea_create(container);
-    lv_obj_set_name(sample_id_textArea, "id_textArea");
+    lv_obj_set_name(sample_id_textArea, "sample_id_textarea");
     lv_textarea_set_one_line(sample_id_textArea, true);
     lv_obj_set_style_radius(sample_id_textArea, 0, LV_PART_MAIN);
     lv_obj_set_style_text_font(sample_id_textArea, &chinese_character_20, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -252,6 +252,7 @@ static void start_test_cb(lv_event_t *e)
     lv_obj_t *container = container_get();
     lv_obj_t *test_standard_dd = lv_obj_get_child_by_name(container, "test_standard_dd");
     lv_obj_t *electrode_dd = lv_obj_get_child_by_name(container, "electrode_dd");
+    lv_obj_t *sample_id_textarea = lv_obj_get_child_by_name(container, "sample_id_textarea");
     lv_obj_t *rho_dd = lv_obj_get_child_by_name(container, "rho_dd");
 
     uint32_t selected_standard_id = lv_dropdown_get_selected(test_standard_dd);
@@ -287,6 +288,30 @@ static void start_test_cb(lv_event_t *e)
             .message = lv_translation_get("start_test_error")
         };
         show_notice_message_box(notice_message);
+    }
+    else
+    {
+        // 初始化测试记录
+        memset(&latest_test_record, 0, sizeof(latest_test_record));
+
+        // 更新测试记录字段
+        strncpy(latest_test_record.standard_name, selected_test_standard_list[selected_standard_id].standard_name,
+                sizeof(latest_test_record.standard_name) - 1U);
+        latest_test_record.standard_name[sizeof(latest_test_record.standard_name) - 1U] = '\0';
+
+        strncpy(latest_test_record.sample_name, lv_textarea_get_text(sample_id_textarea),
+                sizeof(latest_test_record.sample_name) - 1U);
+        latest_test_record.sample_name[sizeof(latest_test_record.sample_name) - 1U] = '\0';
+
+        strncpy(latest_test_record.electrode_name, electrode_list[selected_electrode_id].electrode_name,
+                sizeof(latest_test_record.electrode_name) - 1U);
+        latest_test_record.electrode_name[sizeof(latest_test_record.electrode_name) - 1U] = '\0';
+
+        latest_test_record.capacitance = electrode_list[selected_electrode_id].capacitance;
+        latest_test_record.fill_num = selected_test_standard_list[selected_standard_id].fill_num;
+        latest_test_record.rho_param = rho_param;
+        latest_test_record.frequency = selected_test_standard_list[selected_standard_id].frequency;
+        latest_test_record.standard_template = selected_test_standard_list[selected_standard_id].template;
     }
 }
 

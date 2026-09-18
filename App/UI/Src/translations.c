@@ -26,10 +26,12 @@ const char *const tags[] =
     "stop_tip_message",
     "progress_1/3",
     "progress_2/3",
+    "progress_3/3",
     "progress_1/2",
     "progress_2/2",
     "heat",
     "dielectric_loss",
+    "rho_test",
     "sd_card_mounted_failed",
     "image_lack",
     "electrode",
@@ -40,6 +42,7 @@ const char *const tags[] =
     "test_outcome",
     "valid",
     "invalid",
+    "discharging",
     NULL
 };
 const char *const translations[] = {
@@ -61,10 +64,12 @@ const char *const translations[] = {
     "⚠测试中,按下任意键停止", "⚠Testing... Press any key to stop",
     "测试进度: 1/3", "STEP: 1/3",
     "测试进度: 2/3", "STEP: 2/3",
+    "测试进度: 3/3", "STEP: 3/3",
     "测试进度: 1/2", "STEP: 1/2",
     "测试进度: 2/2", "STEP: 2/2",
     "加热", "Heating",
     "介损测量", "Dielectric Loss Test",
+    "体积电阻率测量", "Resistivity Measurement",
     "SD Card Mounted Failed", "SD Card Mounted Failed",
     "Lack of image resources", "Lack of image resources",
     "电极", "Electrode",
@@ -74,5 +79,6 @@ const char *const translations[] = {
     "测试温度", "Temperature",
     "测试结果", "Test Outcome",
     "有效", "Valid",
-    "无效", "Invalid"
+    "无效", "Invalid",
+    "放电中......", "Discharging......",
 };

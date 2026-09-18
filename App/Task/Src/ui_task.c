@@ -5,9 +5,11 @@
 #include "ui_task.h"
 
 #include "dielectric_loss_test_page.h"
+#include "discharge_window.h"
 #include "heat_page.h"
 #include "main.h"
 #include "record_outcome_page.h"
+#include "rho_test_page.h"
 //
 // Created by 74222 on 2026/7/14.
 //
@@ -27,7 +29,7 @@ void StartUITask(void *argument)
     {
         ui_process_events();
         lv_timer_handler();
-        osDelay(16);
+        vTaskDelay(16);
     }
 }
 
@@ -64,6 +66,17 @@ static void ui_process_events(void)
                                                event.event_data.page_params.rho_param,
                                                event.event_data.page_params.ac_voltage);
                 break;
+            case UI_EVENT_LOAD_DISCHARGE_WINDOW:
+                load_discharge_window();
+                break;
+            case UI_EVENT_LOAD_RHO_TEST_PAGE:
+                container_dispose();
+                container_mid_init();
+                lv_indev_set_group(indev_keypad, NULL);
+                load_rho_test_page(event.event_data.page_params.template,
+                                   event.event_data.page_params.rho_param,
+                                   event.event_data.page_params.current_rho_step,
+                                   event.event_data.page_params.dc_voltage);
             case UI_EVENT_LOAD_ONE_FILL_OUTCOME_PAGE:
                 container_dispose();
                 container_mid_init();

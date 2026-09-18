@@ -31,15 +31,18 @@ typedef enum
     UI_EVENT_SHOW_NOTICE = 0, // 弹窗提示
     UI_EVENT_LOAD_HEAT_PAGE, // 加载加热界面
     UI_EVENT_LOAD_DIELECTRIC_LOSS_TEST_PAGE, // 加载介损测试界面
+    UI_EVENT_LOAD_DISCHARGE_WINDOW, // 加载放电窗口
+    UI_EVENT_LOAD_RHO_TEST_PAGE, // 记载体积电阻率测试界面
     UI_EVENT_LOAD_ONE_FILL_OUTCOME_PAGE, // 加载单次填充测试结果界面
 } ui_event_enum;
 
 typedef struct
 {
     char standard_name[24];
-    test_standard_type template;
+    test_standard_type template; // 测试标准模板
     uint16_t fill_num;
     uint16_t rho_param;
+    uint16_t current_rho_step; //当前体积电阻率施加电压 1:正 | 2:负
     uint16_t ac_voltage; //交流电压
     uint16_t dc_voltage; // 直流电压
 } ui_page_params_t;

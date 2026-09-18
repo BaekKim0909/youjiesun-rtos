@@ -27,6 +27,10 @@ typedef enum
     TEST_STATE_HEATING_TEMPERATURE_ACHIEVED, // 温度达到预设值
     TEST_STATE_WAIT_FIRST_DIELECTRIC_LOSS_TEST_RESPONSE, // 等待FPGA确认第一次介损测试指令
     TEST_STATE_FIRST_DIELECTRIC_LOSS_TEST, // 第一次介损测试
+    TEST_STATE_WAIT_DISCHARGE_BEFORE_FIRST_RHO_POS, // 等待FPGA确认第一次RHO+测试前放电指令
+    TEST_STATE_DISCHARGE_BEFORE_FIRST_RHO_POS_TEST, // 第一次RHO+测试前放电
+    TEST_STATE_WAIT_FIRST_RHO_POSITIVE_TEST_RESPONSE, // 等待FPGA确认第一次RHO+测试指令
+    TEST_STATE_FIRST_RHO_POSITIVE_TEST, // 第一次RHO+测试
     TEST_STATE_WAIT_SECOND_DIELECTRIC_LOSS_TEST_RESPONSE, // 等待FPGA确认第二次介损测试指令
     TEST_STATE_SECOND_DIELECTRIC_LOSS_TEST, // 第二次介损测试
     TEST_STATE_WAIT_HALF_OUTCOME, // 等待两次填充记录中第一次填充结果
@@ -141,6 +145,7 @@ void start_test_task(void *argument)
                 test_context.test_request = event.event_data.test_request;
                 test_context.test_state = TEST_STATE_START_REQUEST_RECEIVED;
                 test_context.current_fill_round = 1;
+                device_state.current_step_state = 0;
                 // 包装FPGA通讯请求
                 fpga_request_t fpga_request = {
                     .request_id = test_allocate_fpga_request_id(),
@@ -251,6 +256,32 @@ void start_test_task(void *argument)
                         {
                         }
                         break;
+                    case TEST_STATE_WAIT_DISCHARGE_BEFORE_FIRST_RHO_POS:
+                        if (fpga_response->response_status == FPGA_RESPONSE_SUCCESS)
+                        {
+                            // FPGA成功收到放电指令
+                            test_context.test_state = TEST_STATE_DISCHARGE_BEFORE_FIRST_RHO_POS_TEST;
+                            ui_event_t ui_event = {
+                                .event_type = UI_EVENT_LOAD_DISCHARGE_WINDOW,
+                            };
+                            ui_submit_request(&ui_event);
+                        }
+                        break;
+                    case TEST_STATE_WAIT_FIRST_RHO_POSITIVE_TEST_RESPONSE:
+                        if (fpga_response->response_status == FPGA_RESPONSE_SUCCESS)
+                        {
+                            test_context.test_state = TEST_STATE_FIRST_RHO_POSITIVE_TEST;
+                            ui_event_t ui_event = {
+                                .event_type = UI_EVENT_LOAD_RHO_TEST_PAGE,
+                                .event_data.page_params = {
+                                    .dc_voltage = test_context.test_request.params.dc_voltage,
+                                    .rho_param = test_context.test_request.params.rho_param,
+                                    .current_rho_step = 1,
+                                    .template = test_context.test_request.standard_type
+                                }
+                            };
+                            ui_submit_request(&ui_event);
+                        }
                     case TEST_STATE_WAIT_ONE_FILL_OUTCOME:
                         if (fpga_response->response_status == FPGA_RESPONSE_TEST_OUTCOME)
                         {
@@ -439,6 +470,8 @@ static bool test_is_expected_fpga_response(const fpga_response_t *response)
         case TEST_STATE_WAIT_HEATING_RESPONSE:
         case TEST_STATE_WAIT_STOP_RESPONSE:
         case TEST_STATE_WAIT_FIRST_DIELECTRIC_LOSS_TEST_RESPONSE:
+        case TEST_STATE_WAIT_DISCHARGE_BEFORE_FIRST_RHO_POS:
+        case TEST_STATE_WAIT_FIRST_RHO_POSITIVE_TEST_RESPONSE:
             return response->operation == FPGA_OPERATION_WRITE_REGISTER;
         case TEST_STATE_WAIT_ONE_FILL_OUTCOME:
             return response->operation == FPGA_OPERATION_READ_OUTCOME;
@@ -461,6 +494,8 @@ void fpga_communication_timer_cb(TimerHandle_t xTimer)
             read_fpga_state();
             break;
         case TEST_STATE_FIRST_DIELECTRIC_LOSS_TEST:
+        case TEST_STATE_DISCHARGE_BEFORE_FIRST_RHO_POS_TEST:
+        case TEST_STATE_FIRST_RHO_POSITIVE_TEST:
             read_remain_test_time();
             break;
         default:
@@ -547,6 +582,46 @@ static void read_fpga_state(void)
                     // 读取测试结果
                     test_submit_read_test_outcome();
                 }
+                // 测体积电阻率
+                else
+                {
+                    const fpga_request_t request = {
+                        .request_id = test_allocate_fpga_request_id(),
+                        .operation = FPGA_OPERATION_WRITE_REGISTER,
+                        .request_data.write_register = {
+                            .register_address = TEST_CONTROL_REG,
+                            .register_value = 0x0009U
+                        }
+                    };
+                    test_context.test_state = TEST_STATE_WAIT_DISCHARGE_BEFORE_FIRST_RHO_POS;
+                    bool result = communicate_submit_request(&request);
+                    if (result)
+                    {
+                        test_context.awaiting_fpga_response_id = request.request_id;
+                        device_state.remain_test_time = 60;
+                        device_state.current_step_state = 0;
+                    }
+                }
+                break;
+            case TEST_STATE_DISCHARGE_BEFORE_FIRST_RHO_POS_TEST:
+                const fpga_request_t request = {
+                    .request_id = test_allocate_fpga_request_id(),
+                    .operation = FPGA_OPERATION_WRITE_REGISTER,
+                    .request_data.write_register = {
+                        .register_address = TEST_CONTROL_REG,
+                        .register_value = 0x0003U
+                    }
+                };
+                test_context.test_state = TEST_STATE_WAIT_FIRST_RHO_POSITIVE_TEST_RESPONSE;
+                // 发送体积电阻率Rho+测试
+                bool result = communicate_submit_request(&request);
+                if (result)
+                {
+                    test_context.awaiting_fpga_response_id = request.request_id;
+                    device_state.remain_test_time = 60;
+                    device_state.current_step_state = 0;
+                }
+                break;
             default:
                 break;
         }

@@ -77,6 +77,7 @@ static void ui_process_events(void)
                                    event.event_data.page_params.rho_param,
                                    event.event_data.page_params.current_rho_step,
                                    event.event_data.page_params.dc_voltage);
+                break;
             case UI_EVENT_LOAD_ONE_FILL_OUTCOME_PAGE:
                 container_dispose();
                 container_mid_init();

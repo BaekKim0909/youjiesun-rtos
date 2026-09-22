@@ -5,11 +5,14 @@
 #include "../Inc/rho_test_page.h"
 #include "lvgl.h"
 #include "mainUI.h"
+#include "system_state.h"
 #include "test_data.h"
 
 LV_FONT_DECLARE(chinese_character_20)
 LV_FONT_DECLARE(chinese_character_24)
 LV_FONT_DECLARE(chinese_character_72)
+
+static void update_rho_remain_test_time_cb(lv_timer_t *timer);
 
 void load_rho_test_page(const test_standard_type standard_type, const uint16_t rho_param,
                         const uint16_t current_rho_step, const uint16_t dc_voltage)
@@ -194,9 +197,24 @@ void load_rho_test_page(const test_standard_type standard_type, const uint16_t r
     lv_obj_set_style_text_color(StepMessageLabel, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
 
 
-    lv_label_set_text(StepMessageLabel,lv_translation_get("rho_test"));
+    lv_label_set_text(StepMessageLabel, lv_translation_get("rho_test"));
 
 
     lv_obj_align(StepMessageLabel, LV_ALIGN_BOTTOM_MID, 0, -85);
     lv_obj_align(ProgressLabel, LV_ALIGN_BOTTOM_LEFT, 20, -21);
+
+    lv_timer_t *update_remain_timeer = lv_timer_create(update_rho_remain_test_time_cb, 1000, timeLabel);
+}
+
+static void update_rho_remain_test_time_cb(lv_timer_t *timer)
+{
+    lv_obj_t *time_label = lv_timer_get_user_data(timer);
+    if (lv_obj_is_valid(time_label))
+    {
+        lv_label_set_text_fmt(time_label, "%lus", device_state.remain_test_time);
+    }
+    else
+    {
+        lv_timer_delete(timer);
+    }
 }

@@ -31,6 +31,8 @@ typedef enum
     TEST_STATE_DISCHARGE_BEFORE_FIRST_RHO_POS_TEST, // 第一次RHO+测试前放电
     TEST_STATE_WAIT_FIRST_RHO_POSITIVE_TEST_RESPONSE, // 等待FPGA确认第一次RHO+测试指令
     TEST_STATE_FIRST_RHO_POSITIVE_TEST, // 第一次RHO+测试
+    TEST_STATE_WAIT_DISCHARGE_BEFORE_FIRST_RHO_NEG, // 等待FPGA确认第一次RHO-测试前放电指令
+    TEST_STATE_DISCHARGE_BEFORE_FIRST_RHO_NEG_TEST, // 第一次RHO-测试前放电
     TEST_STATE_WAIT_SECOND_DIELECTRIC_LOSS_TEST_RESPONSE, // 等待FPGA确认第二次介损测试指令
     TEST_STATE_SECOND_DIELECTRIC_LOSS_TEST, // 第二次介损测试
     TEST_STATE_WAIT_HALF_OUTCOME, // 等待两次填充记录中第一次填充结果
@@ -260,6 +262,8 @@ void start_test_task(void *argument)
                         if (fpga_response->response_status == FPGA_RESPONSE_SUCCESS)
                         {
                             // FPGA成功收到放电指令
+                            device_state.remain_test_time = 60;
+                            device_state.current_step_state = 0;
                             test_context.test_state = TEST_STATE_DISCHARGE_BEFORE_FIRST_RHO_POS_TEST;
                             ui_event_t ui_event = {
                                 .event_type = UI_EVENT_LOAD_DISCHARGE_WINDOW,
@@ -270,6 +274,8 @@ void start_test_task(void *argument)
                     case TEST_STATE_WAIT_FIRST_RHO_POSITIVE_TEST_RESPONSE:
                         if (fpga_response->response_status == FPGA_RESPONSE_SUCCESS)
                         {
+                            device_state.remain_test_time = 60;
+                            device_state.current_step_state = 0;
                             test_context.test_state = TEST_STATE_FIRST_RHO_POSITIVE_TEST;
                             ui_event_t ui_event = {
                                 .event_type = UI_EVENT_LOAD_RHO_TEST_PAGE,
@@ -282,6 +288,22 @@ void start_test_task(void *argument)
                             };
                             ui_submit_request(&ui_event);
                         }
+                        break;
+                    case TEST_STATE_WAIT_DISCHARGE_BEFORE_FIRST_RHO_NEG:
+                    {
+                        if (fpga_response->response_status == FPGA_RESPONSE_SUCCESS)
+                        {
+                            // FPGA成功收到放电指令
+                            device_state.remain_test_time = 300;
+                            device_state.current_step_state = 0;
+                            test_context.test_state = TEST_STATE_DISCHARGE_BEFORE_FIRST_RHO_NEG_TEST;
+                            ui_event_t ui_event = {
+                                .event_type = UI_EVENT_LOAD_DISCHARGE_WINDOW,
+                            };
+                            ui_submit_request(&ui_event);
+                        }
+                        break;
+                    }
                     case TEST_STATE_WAIT_ONE_FILL_OUTCOME:
                         if (fpga_response->response_status == FPGA_RESPONSE_TEST_OUTCOME)
                         {
@@ -472,6 +494,7 @@ static bool test_is_expected_fpga_response(const fpga_response_t *response)
         case TEST_STATE_WAIT_FIRST_DIELECTRIC_LOSS_TEST_RESPONSE:
         case TEST_STATE_WAIT_DISCHARGE_BEFORE_FIRST_RHO_POS:
         case TEST_STATE_WAIT_FIRST_RHO_POSITIVE_TEST_RESPONSE:
+        case TEST_STATE_WAIT_DISCHARGE_BEFORE_FIRST_RHO_NEG:
             return response->operation == FPGA_OPERATION_WRITE_REGISTER;
         case TEST_STATE_WAIT_ONE_FILL_OUTCOME:
             return response->operation == FPGA_OPERATION_READ_OUTCOME;
@@ -496,6 +519,7 @@ void fpga_communication_timer_cb(TimerHandle_t xTimer)
         case TEST_STATE_FIRST_DIELECTRIC_LOSS_TEST:
         case TEST_STATE_DISCHARGE_BEFORE_FIRST_RHO_POS_TEST:
         case TEST_STATE_FIRST_RHO_POSITIVE_TEST:
+        case TEST_STATE_DISCHARGE_BEFORE_FIRST_RHO_NEG_TEST:
             read_remain_test_time();
             break;
         default:
@@ -598,12 +622,11 @@ static void read_fpga_state(void)
                     if (result)
                     {
                         test_context.awaiting_fpga_response_id = request.request_id;
-                        device_state.remain_test_time = 60;
-                        device_state.current_step_state = 0;
                     }
                 }
                 break;
             case TEST_STATE_DISCHARGE_BEFORE_FIRST_RHO_POS_TEST:
+            {
                 const fpga_request_t request = {
                     .request_id = test_allocate_fpga_request_id(),
                     .operation = FPGA_OPERATION_WRITE_REGISTER,
@@ -618,10 +641,27 @@ static void read_fpga_state(void)
                 if (result)
                 {
                     test_context.awaiting_fpga_response_id = request.request_id;
-                    device_state.remain_test_time = 60;
-                    device_state.current_step_state = 0;
                 }
                 break;
+            }
+            case TEST_STATE_FIRST_RHO_POSITIVE_TEST:
+            {
+                const fpga_request_t request = {
+                    .request_id = test_allocate_fpga_request_id(),
+                    .operation = FPGA_OPERATION_WRITE_REGISTER,
+                    .request_data.write_register = {
+                        .register_address = TEST_CONTROL_REG,
+                        .register_value = 0x0009U
+                    }
+                };
+                test_context.test_state = TEST_STATE_WAIT_DISCHARGE_BEFORE_FIRST_RHO_NEG;
+                bool result = communicate_submit_request(&request);
+                if (result)
+                {
+                    test_context.awaiting_fpga_response_id = request.request_id;
+                }
+                break;
+            }
             default:
                 break;
         }

@@ -23,6 +23,13 @@
 #define FPGA_COMM_REGISTER_DATA_START_INDEX     (6U)    /* 指令数据内容起始index */
 #define FPGA_COMM_REGISTER_DATA_END_INDEX(reg_num)\
     (FPGA_COMM_REGISTER_DATA_START_INDEX + (reg_num) * FPGA_COMM_REGISTER_SIZE)
+
+/**
+ * @brief 测试控制寄存器 命名字
+ */
+
+#define HEAT_COMMAND                            (0x0001U)   /* 加热指令 */
+#define FIRST_DIELECTRIC_LOSS_TEST_COMMAND      (0x0002U)   /* 第一次介损测试指令 */
 #include <stdint.h>
 
 typedef enum

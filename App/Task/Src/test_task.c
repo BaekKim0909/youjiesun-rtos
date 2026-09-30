@@ -362,7 +362,7 @@ static bool test_submit_heating_request(void)
         .operation = FPGA_OPERATION_WRITE_REGISTER,
         .request_data.write_register = {
             .register_address = TEST_CONTROL_REG,
-            .register_value = 0x0001U
+            .register_value = HEAT_COMMAND
         }
     };
 
@@ -384,7 +384,7 @@ static bool test_submit_first_dielectric_loss_test(void)
         .operation = FPGA_OPERATION_WRITE_REGISTER,
         .request_data.write_register = {
             .register_address = TEST_CONTROL_REG,
-            .register_value = 0x0002U
+            .register_value = FIRST_DIELECTRIC_LOSS_TEST_COMMAND
         }
     };
     if (!communicate_submit_request(&request))
